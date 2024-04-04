@@ -2,3 +2,7 @@
 !assignment2/
 !assignment2/client.c
 !assignment2/server.c
+
+!.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
