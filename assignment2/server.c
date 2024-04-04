@@ -1,7 +1,5 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,9 +7,16 @@
 #include <unistd.h>
 
 #define BUF_SIZE 100
+#define MSG_CONNECTED "Connected"
+#define MSG_TURN "Turn"
+#define MSG_NOT_TURN "NotTurn"
+#define MSG_YOU_WIN "당신이 이겼습니다."
+#define MSG_YOU_LOST "당신은 패배했습니다."
+#define MSG_KEEP_GOING "KeepGoing"
 
 void initialize_server(int *serv_sock, in_port_t sin_port);
 void connect_to_clients(int serv_sock, int *clnt_sock);
+void play(const int *clnt_sock);
 void finalize_server(int serv_sock);
 
 int main(int argc, char *argv[]) {
@@ -27,9 +32,33 @@ int main(int argc, char *argv[]) {
 
   connect_to_clients(serv_sock, clnt_sock);
 
+  play(clnt_sock);
+
   finalize_server(serv_sock);
 
   return 0;
+}
+
+void read_safely(int clnt_sock, char *buf) {
+  int len;
+
+  len = read(clnt_sock, buf, BUF_SIZE);
+  if (len == 0) {
+    printf("Disconnected from the client.\n");
+    abort();
+  }
+  if (len == -1) {
+    perror("Failed to read from the client");
+    abort();
+  }
+  buf[len] = 0;
+}
+
+void write_safely(int clnt_sock, const char *message) {
+  if (write(clnt_sock, message, strlen(message)) == -1) {
+    perror("Failed to write to the client.");
+    abort();
+  };
 }
 
 /**
@@ -93,13 +122,73 @@ void connect_to_clients(int serv_sock, int *clnt_sock) {
 
   // 두 플레이어가 모두 연결이 되었을 때, 각 플레이어에 메시지를 보냅니다.
   for (i = 0; i < 2; i++) {
-    if (write(clnt_sock[i], "Connected\0", BUF_SIZE) == -1) {
-      perror("failed to write to the client socket (message: Connected)");
-      abort();
-    };
+    write_safely(clnt_sock[i], MSG_CONNECTED);
   }
 
   printf("All clients connected.\n");
+}
+
+/**
+ * Function: play
+ * --------------
+ * 두 클라이언트의 차례를 번갈에 게임을 진행합니다.
+ * 오류가 발생하면 프로그램을 종료시킵니다.
+ * clnt_sock: 두 클라이언트의 소켓 디스크립터가 저장된 크기 2의 배열 포인터입니다.
+ */
+void play(const int *clnt_sock) {
+  int i, len, N, M;
+  char message[BUF_SIZE];
+
+  for (i = 0;; i++) {
+    int leading = i % 2;
+    int rival = (i + 1) % 2;
+
+    // 각 클라이언트에 차례를 통보합니다.
+    write_safely(clnt_sock[leading], MSG_TURN);
+    write_safely(clnt_sock[rival], MSG_NOT_TURN);
+
+    // 차례인 클라이언트로부터 값을 받아옵니다.
+    read_safely(clnt_sock[leading], message);
+    N = atoi(message);
+    read_safely(clnt_sock[leading], message);
+    M = atoi(message);
+    if (N < 1 || N > 25) {
+      printf("Invalid input from the lading client.\n");
+      abort();
+    }
+
+    // 차례인 클라이언트의 빙고 상태에 따라 처리합니다.
+    if (M > 3) {
+      // 승패통보
+      write_safely(clnt_sock[leading], MSG_YOU_WIN);
+      write_safely(clnt_sock[rival], MSG_YOU_LOST);
+      break;  // 서버 종료
+    } else {
+      // 게임 계속 진행 통보
+      write_safely(clnt_sock[leading], MSG_KEEP_GOING);
+      write_safely(clnt_sock[rival], MSG_KEEP_GOING);
+    }
+
+    // 다른 클라이언트에 응답을 전달합니다.
+    sprintf(message, "%d", N);
+    write_safely(clnt_sock[rival], message);
+
+    // 다른 클라이언트로부터 빙고 상태를 받아옵니다.
+    read_safely(clnt_sock[rival], message);
+    M = atoi(message);
+
+    // 다른 클라이언트의 빙고 상태에 따라 처리합니다.
+    if (M > 3) {
+      // 승패통보
+      write_safely(clnt_sock[leading], MSG_YOU_LOST);
+      write_safely(clnt_sock[rival], MSG_YOU_WIN);
+      break;  // 서버 종료
+    } else {
+      // 게임 계속 진행 통보
+      write_safely(clnt_sock[leading], MSG_KEEP_GOING);
+      write_safely(clnt_sock[rival], MSG_KEEP_GOING);
+    }
+  }
 }
 
 /**
