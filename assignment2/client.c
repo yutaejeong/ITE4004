@@ -7,13 +7,22 @@
 #include <unistd.h>
 
 #define BUF_SIZE 1024
+#define MSG_CONNECTED "Connected"
+#define MSG_TURN "Turn"
+#define MSG_NOT_TURN "NotTurn"
+#define MSG_YOU_WIN "당신이 이겼습니다."
+#define MSG_YOU_LOST "당신은 패배했습니다."
+#define MSG_KEEP_GOING "KeepGoing"
 
 int board[5][5];
+int check[25];            // 빙고판에서 해당 숫자가 지워졌는지를 표시하는 배열
 
 void error_handling(char *message);
-void board_init();   // 빙고판을 입력받아서 초기화하는 함수
-int check_bingo();   // 빙고 검증 함수
-void print_board();  // 빙고판과 빙고 수를 출력하는 함수
+void board_init();        // 빙고판을 입력받아서 초기화하는 함수
+int check_bingo();        // 빙고 검증 함수
+void print_board();       // 빙고판과 빙고 수를 출력하는 함수
+void check_input(int n);  // 입력받은 숫자의 유효성을 확인하고 유효하지 않으면 다시 입력 받는 함수
+void update_board(int n); // 해당 숫자를 빙고판에서 지우는 함수
 
 // 아래 두 함수에서 서버 클라 커뮤니케이션과 빙고 게임을 구현하시면 될 것 같습니다.
 void *send_msg(void *arg);
@@ -64,7 +73,7 @@ void error_handling(char *message) {
 
 void board_init() {
   while (1) {
-    int check[25] = {};
+    memset(check, 0, sizeof(check));
 
     printf("빙고판을 생성합니다. 1 ~ 25 사이에서 중복되지 않게 숫자를 입력하세요.\n");
     for (int i = 0; i < 5; i++) {
@@ -119,6 +128,34 @@ void print_board() {
   }
 
   printf("현재 빙고 수: %d\n\n", check_bingo());
+}
+
+void check_input(int n) {
+  while(1) {
+    if (n < 1 || n > 25) {
+      printf("1 ~ 25 사이의 숫자를 입력하세요: ");
+      scanf("%d", &n);
+      continue;
+    }
+    if (!check[n - 1]) {
+      printf("1 ~ 25 사이의 숫자 중에서 지워지지 않은 숫자를 입력하세요: ");
+      scanf("%d", &n);
+      continue;
+    }
+    break;
+  }
+}
+
+void update_board(int n) {
+  for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < 5; j++) {
+      if (n == board[i][j]) {
+        board[i][j] = 0;
+				check[n - 1] = 0;
+				return;
+      }
+    }
+  }
 }
 
 void *send_msg(void *arg) {
