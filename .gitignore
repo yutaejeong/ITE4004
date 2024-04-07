@@ -1,8 +1,8 @@
-*
-!assignment2/
+assignment2/**
 !assignment2/client.c
 !assignment2/server.c
 
-!.vscode/
-!.vscode/extensions.json
-!.vscode/settings.json
+assignment3/discord-front/node_modules
+assignment3/discord-front/build
+assignment3/discord-back/node_modules
+assignment3/discord-back/index.js
