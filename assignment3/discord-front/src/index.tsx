@@ -7,12 +7,21 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
+const styles = {
+  global: {
+    body: {
+      color: "#EBF8FF",
+      bg: "#282c34",
+    },
+  },
+};
+
 const fonts = {
   body: "Pretendard",
   heading: "Pretendard",
 };
 
-const theme = extendTheme({ fonts });
+const theme = extendTheme({ styles, fonts });
 
 root.render(
   <ChakraProvider theme={theme}>

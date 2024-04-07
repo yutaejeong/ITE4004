@@ -2,6 +2,7 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "ms-vscode.cpptools",
   "cSpell.words": [
-    "chakra"
+    "chakra",
+    "Formik"
   ]
 }

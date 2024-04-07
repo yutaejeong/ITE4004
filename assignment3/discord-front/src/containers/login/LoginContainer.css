@@ -6,12 +6,10 @@
   justify-content: center;
   align-items: center;
   gap: 24px;
-  background-color: #282c34;
 }
 
 .login-area {
   width: 320px;
   display: flex;
-  align-items: center;
   gap: 8px;
 }
