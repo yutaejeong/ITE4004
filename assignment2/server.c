@@ -191,6 +191,7 @@ void play(const int *clnt_sock) {
   }
 }
 
+<<<<<<< Updated upstream
 /**
  * Function: finalize_server
  * -------------------------
@@ -206,3 +207,10 @@ void finalize_server(int serv_sock) {
 
   printf("Server is finalized successfully.\n");
 }
+=======
+void error_handling(char *message) {
+  fputs(message, stderr);
+  fputc('\n', stderr);
+  exit(1);
+}
+>>>>>>> Stashed changes
