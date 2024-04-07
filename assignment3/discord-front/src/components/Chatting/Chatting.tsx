@@ -17,7 +17,7 @@ export function Chatting() {
    * 메시지, 오디오, 비디오 송수신 및 상태 관리는 해당 훅에서 한 번에 다룰 예정
    */
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket(process.env.REACT_APP_WS_SERVER!);
 
     ws.onopen = () => {
       ws.send("Hello, World!");
