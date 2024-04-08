@@ -1,7 +1,7 @@
 import { Heading } from "@chakra-ui/react";
 import { FormikHelpers } from "formik";
 import { Dispatch, SetStateAction } from "react";
-import { FormikForm } from "../../components";
+import { FormikForm } from "../../components/common";
 import "./LoginContainer.css";
 
 interface Props {
