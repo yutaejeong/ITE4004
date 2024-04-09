@@ -1,0 +1,37 @@
+.room-container {
+  width: 100dvw;
+  height: 100dvh;
+  display: grid;
+  grid-template-areas:
+    "voice cam"
+    "voice chat"
+    "control chat";
+  grid-template-columns: 228px 1fr;
+  grid-template-rows: calc(50dvh - 64px) calc(50dvh - 84px) 84px;
+  gap: 12px;
+  padding: 20px;
+}
+
+.voice-area {
+  width: 100%;
+  height: 100%;
+  grid-area: voice;
+}
+
+.control-area {
+  width: 100%;
+  height: 100%;
+  grid-area: control;
+}
+
+.cam-area {
+  width: 100%;
+  height: 100%;
+  grid-area: cam;
+}
+
+.chat-area {
+  width: 100%;
+  height: 100%;
+  grid-area: chat;
+}

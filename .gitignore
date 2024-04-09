@@ -4,5 +4,6 @@ assignment2/**
 
 assignment3/discord-front/node_modules
 assignment3/discord-front/build
+assignment3/discord-front/.env
 assignment3/discord-back/node_modules
 assignment3/discord-back/index.js

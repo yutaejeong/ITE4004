@@ -1,17 +1,22 @@
-import { Button, Heading, Input } from "@chakra-ui/react";
-import "./App.css";
+import { useColorMode } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { LoginContainer } from "./containers/login/LoginContainer";
+import { RoomContainer } from "./containers/room/RoomContainer";
 
 function App() {
-  return (
-    <div className="container">
-      <Heading size="3xl" color="white">
-        Welcome ✨
-      </Heading>
-      <main className="login-area">
-        <Input color="white" placeholder="사용자명" />
-        <Button colorScheme="blue">입장</Button>
-      </main>
-    </div>
+  const { colorMode, toggleColorMode } = useColorMode();
+  const [nickname, setNickname] = useState<string>("");
+
+  useEffect(() => {
+    if (colorMode === "light") {
+      toggleColorMode();
+    }
+  }, [colorMode, toggleColorMode]);
+
+  return nickname ? (
+    <RoomContainer nickname={nickname} />
+  ) : (
+    <LoginContainer setNickname={setNickname} />
   );
 }
 
