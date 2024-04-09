@@ -16,6 +16,8 @@
 
 int board[5][5];
 int check[25];            // 빙고판에서 해당 숫자가 지워졌는지를 표시하는 배열
+int turn; 		  // 0 : 시작 전 or send_msg 휴식 / 1 : 자신 턴 / 2 : 상대 턴
+pthread_mutex_t mutex;
 
 void error_handling(char *message);
 void board_init();        // 빙고판을 입력받아서 초기화하는 함수
@@ -161,16 +163,28 @@ void update_board(int n) {
 void *send_msg(void *arg) {
   int sock = *((int *)arg);
   char msg[BUF_SIZE];
+  int input = -1;
 
-  // while (1) {
-  // 	fgets(msg, BUF_SIZE, stdin);
-  // 	if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
-  //     {
-  //         close(sock);
-  //         exit(0);
-  //     }
-  // }
-
+  if(turn == 1){  			// 자신의 턴일때
+    pthread_mutex_lock(&mutex);		// mutex lock
+    print_board();			// 보드 출력
+    check_input(input);			// 값 입력
+    update_board(input);		// 값 보드에 업데이트
+    sprintf(msg,"%d",input);		// int형인 input을 string으로 
+    write(sock, msg, strlen(msg));	// msg 전송
+    sprintf(msg,"%d",check_bingo());	// 몇줄 빙고인지 msg에 입력
+    write(sock, msg, strlen(msg));	// msg 전송
+    turn = 0;				// 턴 값 초기화
+    pthread_mutex_unlock(&mutex);	// mutex unlock
+  }
+  else if(turn == 2){ 			// 상대의 턴일때
+    pthread_mutex_lock(&mutex);		// mutex lock
+    sprintf(msg,"%d",check_bingo());	// 몇줄 빙고인지 msg에 입력
+    write(sock, msg, strlen(msg));	// msg 전송
+    turn = 0;				// 턴 값 초기화
+    pthread_mutex_unlock(&mutex);	// mutex unlock
+  }
+  
   return NULL;
 }
 
@@ -190,5 +204,3 @@ void *recv_msg(void *arg) {
 
   return NULL;
 }
-=======
->>>>>>> Stashed changes
