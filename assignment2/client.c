@@ -1,3 +1,5 @@
+// gcc client.c -o client -D_REENTRANT -lpthread
+
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -188,19 +190,58 @@ void *send_msg(void *arg) {
   return NULL;
 }
 
-void *recv_msg(void *arg) {
+void *recv_msg(void *arg)
+{
   int sock = *((int *)arg);
   char msg[BUF_SIZE];
+  char output[BUF_SIZE + 20];
   int str_len;
 
-  // while (1) {
-  //     str_len = read(sock, msg, BUF_SIZE - 1);
-  //     if (str_len == -1)
-  //         return (void *)-1;
+  while (1)
+  {
+    str_len = read(sock, msg, BUF_SIZE - 1);
+    if (str_len == -1)
+      return (void *)-1;
 
-  //     msg[str_len] = 0;
-  //     fputs(msg, stdout);
-  // }
+    msg[str_len] = 0;
+
+    // 서버에서 받는 메세지 처리
+    if (msg == MSG_CONNECTED)
+    {
+      fputs(msg, stdout);
+    }
+    else if (msg == MSG_TURN)
+    {
+      turn = 1;
+    }
+    else if (msg == MSG_NOT_TURN)
+    {
+      turn = 2;
+    }
+    else if (msg == MSG_YOU_WIN)
+    {
+      fputs(msg, stdout);
+      break;
+    }
+    else if (msg == MSG_YOU_LOST)
+    {
+      fputs(msg, stdout);
+      break;
+    }
+    // 숫자를 받았을 때 처리: 상대방이 보낸 숫자를 받아서 보드에 업데이트하고 빙고 수를 체크한 후 빙고 수를 보냄
+    else
+    {
+      sprintf(output, "상대의숫자: %s", msg);
+      fputs(output, stdout);
+      update_board(atoi(msg));
+      print_board();
+
+      pthread_mutex_lock(&mutex); // mutex lock
+      sprintf(msg, "%d", check_bingo());
+      write(sock, msg, strlen(msg));
+      pthread_mutex_unlock(&mutex); // mutex unlock
+    }
+  }
 
   return NULL;
 }
