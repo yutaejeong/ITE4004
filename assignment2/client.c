@@ -179,12 +179,29 @@ void *send_msg(void *arg) {
     turn = 0;				// 턴 값 초기화
     pthread_mutex_unlock(&mutex);	// mutex unlock
   }
-  else if(turn == 2){ 			// 상대의 턴일때
-    pthread_mutex_lock(&mutex);		// mutex lock
-    sprintf(msg,"%d",check_bingo());	// 몇줄 빙고인지 msg에 입력
-    write(sock, msg, strlen(msg));	// msg 전송
-    turn = 0;				// 턴 값 초기화
-    pthread_mutex_unlock(&mutex);	// mutex unlock
+  while (1)
+  {
+    fgets(msg, BUF_SIZE, stdin);
+    if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
+    {
+      close(sock);
+      exit(0);
+    }
+
+      input = atoi(msg);                 // string형인 msg를 int형으로
+    else if (turn == 2)
+    { // 상대의 턴일때
+      // pthread_mutex_lock(&mutex);        // mutex lock
+      // sprintf(msg, "%d", check_bingo()); // 몇줄 빙고인지 msg에 입력
+      // write(sock, msg, strlen(msg));     // msg 전송
+      // turn = 0;                          // 턴 값 초기화
+      // pthread_mutex_unlock(&mutex);      // mutex unlock
+      fputs("상대방의 턴입니다. 기다려주세요.\n", stdout);
+    }
+    else
+    {
+      fputs("상대방의 턴입니다. 기다려주세요.\n", stdout);
+    }
   }
   
   return NULL;
