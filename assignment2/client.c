@@ -38,15 +38,14 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  board_init();
-
   int sock;
   struct sockaddr_in serv_adr;
   pthread_t snd_thread, rcv_thread;
   void *thread_return;
 
   sock = socket(PF_INET, SOCK_STREAM, 0);
-  if (sock == -1) {
+  if (sock == -1)
+  {
     error_handling("socket() error!");
   }
 
@@ -55,9 +54,13 @@ int main(int argc, char *argv[]) {
   serv_adr.sin_addr.s_addr = inet_addr(argv[1]);
   serv_adr.sin_port = htons(atoi(argv[2]));
 
-  if (connect(sock, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) == -1) {
+  if (connect(sock, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) == -1)
+  {
     error_handling("connect() error!");
   }
+
+  board_init();
+
   pthread_mutex_init(&mutex, NULL);
   pthread_create(&snd_thread, NULL, send_msg, (void *)&sock);
   pthread_create(&rcv_thread, NULL, recv_msg, (void *)&sock);
@@ -167,18 +170,6 @@ void *send_msg(void *arg) {
   char msg[BUF_SIZE];
   int input = -1;
 
-  if(turn == 1){  			// 자신의 턴일때
-    pthread_mutex_lock(&mutex);		// mutex lock
-    print_board();			// 보드 출력
-    check_input(input);			// 값 입력
-    update_board(input);		// 값 보드에 업데이트
-    sprintf(msg,"%d",input);		// int형인 input을 string으로 
-    write(sock, msg, strlen(msg));	// msg 전송
-    sprintf(msg,"%d",check_bingo());	// 몇줄 빙고인지 msg에 입력
-    write(sock, msg, strlen(msg));	// msg 전송
-    turn = 0;				// 턴 값 초기화
-    pthread_mutex_unlock(&mutex);	// mutex unlock
-  }
   while (1)
   {
     fgets(msg, BUF_SIZE, stdin);
@@ -188,7 +179,21 @@ void *send_msg(void *arg) {
       exit(0);
     }
 
+    if (turn == 1)
+    {                             // 자신의 턴일때
+      pthread_mutex_lock(&mutex); // mutex lock
+      print_board();              // 보드 출력
+
       input = atoi(msg);                 // string형인 msg를 int형으로
+      check_input(input);                // 값 입력
+      update_board(input);               // 값 보드에 업데이트
+      sprintf(msg, "%d", input);         // int형인 input을 string으로
+      write(sock, msg, strlen(msg));     // msg 전송
+      sprintf(msg, "%d", check_bingo()); // 몇줄 빙고인지 msg에 입력
+      write(sock, msg, strlen(msg));     // msg 전송
+      turn = 0;                          // 턴 값 초기화
+      pthread_mutex_unlock(&mutex);      // mutex unlock
+    }
     else if (turn == 2)
     { // 상대의 턴일때
       // pthread_mutex_lock(&mutex);        // mutex lock
