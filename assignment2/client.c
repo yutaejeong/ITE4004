@@ -107,7 +107,7 @@ void read_safely(int sock, char *buf) {
     }
   }
   buf[total_len] = 0;
-  printf("서버로부터 다음의 값을 수신했습니다: %s (%d)\n", buf, total_len);
+  // printf("서버로부터 다음의 값을 수신했습니다: %s (%d)\n", buf, total_len);
 }
 
 void write_safely(int sock, const char *message) {
@@ -116,7 +116,7 @@ void write_safely(int sock, const char *message) {
     perror("Failed to write to the client.");
     abort();
   };
-  printf("서버로 다음의 값을 송신했습니다: %s (%d)\n", message, result);
+  // printf("서버로 다음의 값을 송신했습니다: %s (%d)\n", message, result);
 }
 
 void board_init() {
@@ -309,7 +309,7 @@ void *recv_msg(void *arg) {
     pthread_mutex_lock(&mutex_recv_msg);
 
     // 서버에서 받는 메세지 처리
-    printf("서버로부터 응답을 기다리는 중입니다. (turn: %d)\n", turn);
+    // printf("서버로부터 응답을 기다리는 중입니다. (turn: %d)\n", turn);
     read_safely(sock, msg);
     if (strcmp(msg, MSG_CONNECTED) == 0) {
       printf("상대편과 연결이 되었습니다.\n");
