@@ -8,11 +8,13 @@
 
 #define BUF_SIZE 100
 #define MSG_CONNECTED "Connected"
+#define MSG_READY "Ready"
 #define MSG_TURN "Turn"
 #define MSG_NOT_TURN "NotTurn"
 #define MSG_YOU_WIN "당신이 이겼습니다."
 #define MSG_YOU_LOST "당신은 패배했습니다."
-#define MSG_KEEP_GOING "KeepGoing"
+#define MSG_KEEP_GOING_1 "KeepGoing1"
+#define MSG_KEEP_GOING_2 "KeepGoing2"
 
 void initialize_server(int *serv_sock, in_port_t sin_port);
 void connect_to_clients(int serv_sock, int *clnt_sock);
@@ -40,25 +42,39 @@ int main(int argc, char *argv[]) {
 }
 
 void read_safely(int clnt_sock, char *buf) {
-  int len;
+  int total_len, len;
+  char c = 1;
 
-  len = read(clnt_sock, buf, BUF_SIZE);
-  if (len == 0) {
-    printf("Disconnected from the client.\n");
-    abort();
+  // 소켓의 입력 버퍼에 쌓여있는 값들을 널 문자 단위로 읽어들이도록 했습니다.
+  total_len = 0;
+  while (c != 0) {
+    len = read(clnt_sock, &c, 1);
+    if (len == 0) {
+      printf("Disconnected from the server.\n");
+      abort();
+    }
+    if (len == -1) {
+      perror("Failed to read from the server");
+      abort();
+    }
+    if (c) {
+      total_len += 1;
+      buf[total_len - 1] = c;
+    }
   }
-  if (len == -1) {
-    perror("Failed to read from the client");
-    abort();
-  }
-  buf[len] = 0;
+  buf[total_len] = 0;
+
+  printf("%d 소켓에서 다음의 값을 수신했습니다: %s (%d)\n", clnt_sock, buf, total_len);
 }
 
 void write_safely(int clnt_sock, const char *message) {
-  if (write(clnt_sock, message, strlen(message)) == -1) {
+  int result = write(clnt_sock, message, strlen(message) + 1);
+  if (result == -1) {
     perror("Failed to write to the client.");
     abort();
   };
+
+  printf("%d 소켓으로 다음의 값을 송신했습니다: %s (%d)\n", clnt_sock, message, result);
 }
 
 /**
@@ -125,7 +141,7 @@ void connect_to_clients(int serv_sock, int *clnt_sock) {
     write_safely(clnt_sock[i], MSG_CONNECTED);
   }
 
-  printf("All clients connected.\n");
+  printf("모든 클라이언트가 연결되었습니다.\n");
 }
 
 /**
@@ -139,6 +155,14 @@ void play(const int *clnt_sock) {
   int i, len, N, M;
   char message[BUF_SIZE];
 
+  for (i = 0; i < 2; i++) {
+    read_safely(clnt_sock[i], message);
+    if (strcmp(message, MSG_READY) != 0) {
+      printf("%d번째 클라이언트(%d 소켓)이 제대로 준비되지 않았습니다.\n", i, clnt_sock[i]);
+      abort();
+    }
+  }
+
   for (i = 0;; i++) {
     int leading = i % 2;
     int rival = (i + 1) % 2;
@@ -148,25 +172,22 @@ void play(const int *clnt_sock) {
     write_safely(clnt_sock[rival], MSG_NOT_TURN);
 
     // 차례인 클라이언트로부터 값을 받아옵니다.
+    printf("%d번째 클라이언트(%d 소켓)로부터 읽어들인 N, M 값은... \n", leading, clnt_sock[leading]);
     read_safely(clnt_sock[leading], message);
-    N = atoi(message);
-    read_safely(clnt_sock[leading], message);
-    M = atoi(message);
-    if (N < 1 || N > 25) {
-      printf("Invalid input from the lading client.\n");
-      abort();
-    }
+    sscanf(message, "%d %d", &N, &M);
+    printf("N: %d, M: %d 입니다.\n", N, M);
 
     // 차례인 클라이언트의 빙고 상태에 따라 처리합니다.
-    if (M > 3) {
+    if (M >= 3) {
       // 승패통보
+      printf("%d번째 클라이언트(%d 소켓)가 승리하였습니다.\n", leading, clnt_sock[leading]);
       write_safely(clnt_sock[leading], MSG_YOU_WIN);
       write_safely(clnt_sock[rival], MSG_YOU_LOST);
       break;  // 서버 종료
     } else {
       // 게임 계속 진행 통보
-      write_safely(clnt_sock[leading], MSG_KEEP_GOING);
-      write_safely(clnt_sock[rival], MSG_KEEP_GOING);
+      write_safely(clnt_sock[leading], MSG_KEEP_GOING_1);
+      write_safely(clnt_sock[rival], MSG_KEEP_GOING_1);
     }
 
     // 다른 클라이언트에 응답을 전달합니다.
@@ -178,15 +199,15 @@ void play(const int *clnt_sock) {
     M = atoi(message);
 
     // 다른 클라이언트의 빙고 상태에 따라 처리합니다.
-    if (M > 3) {
+    if (M >= 3) {
       // 승패통보
       write_safely(clnt_sock[leading], MSG_YOU_LOST);
       write_safely(clnt_sock[rival], MSG_YOU_WIN);
       break;  // 서버 종료
     } else {
       // 게임 계속 진행 통보
-      write_safely(clnt_sock[leading], MSG_KEEP_GOING);
-      write_safely(clnt_sock[rival], MSG_KEEP_GOING);
+      write_safely(clnt_sock[leading], MSG_KEEP_GOING_2);
+      write_safely(clnt_sock[rival], MSG_KEEP_GOING_2);
     }
   }
 }
