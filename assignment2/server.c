@@ -50,11 +50,11 @@ void read_safely(int clnt_sock, char *buf) {
   while (c != 0) {
     len = read(clnt_sock, &c, 1);
     if (len == 0) {
-      printf("Disconnected from the server.\n");
+      printf("Disconnected from the client.\n");
       abort();
     }
     if (len == -1) {
-      perror("Failed to read from the server");
+      perror("Failed to read from the client");
       abort();
     }
     if (c) {
@@ -86,11 +86,18 @@ void write_safely(int clnt_sock, const char *message) {
  * sin_port: 서버를 열 포트 번호입니다.
  */
 void initialize_server(int *serv_sock, in_port_t sin_port) {
+  int optval;
   struct sockaddr_in serv_adr;
 
   *serv_sock = socket(PF_INET, SOCK_STREAM, 0);
   if (*serv_sock == -1) {
     perror("failed to create an endpoint for communication");
+    abort();
+  }
+
+  // 비정상 종료 시 동일한 포트를 즉시 재사용 가능하도록 함
+  if (setsockopt(*serv_sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) == -1) {
+    perror("failed to set an option to the socket");
     abort();
   }
 
