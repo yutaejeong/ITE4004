@@ -1,7 +1,6 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +37,7 @@ void *recv_msg(void *arg);  // 서버로부터 메세지를 받는 함수 (스�
 void *send_msg(void *arg);  // 서버로 메세지를 보내는 함수 (스레드)
 
 int main(int argc, char *argv[]) {
-  int sock;
+  int sock, optval;
   struct sockaddr_in serv_adr;
   pthread_t snd_thread, rcv_thread;
 
@@ -56,6 +55,12 @@ int main(int argc, char *argv[]) {
   if (sock == -1) {
     perror("failed to create socket");
     exit(1);
+  }
+
+  // 비정상 종료 시 동일한 포트를 즉시 재사용 가능하도록 함
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) == -1) {
+    perror("failed to set an option to the socket");
+    abort();
   }
 
   memset(&serv_adr, 0, sizeof(serv_adr));
@@ -107,16 +112,23 @@ void read_safely(int sock, char *buf) {
     }
   }
   buf[total_len] = 0;
-  // printf("서버로부터 다음의 값을 수신했습니다: %s (%d)\n", buf, total_len);
 }
 
 void write_safely(int sock, const char *message) {
   int result = write(sock, message, strlen(message) + 1);
   if (result == -1) {
-    perror("Failed to write to the client.");
+    perror("Failed to write to the server.");
     abort();
   };
-  // printf("서버로 다음의 값을 송신했습니다: %s (%d)\n", message, result);
+}
+
+void scan_one_integer_safely(int *dest) {
+  if (scanf("%d", dest) == 0) {
+    while (getchar() != '\n') {
+      // 잘못된 형식의 입력일 경우 입력 버퍼를 지움
+    };
+    *dest = 0;
+  }
 }
 
 void board_init() {
@@ -141,7 +153,7 @@ void board_init() {
         if (__debug_input_file_descriptor__) {
           fscanf(__debug_input_file_descriptor__, "%d", row + j);
         } else {
-          scanf("%d", row + j);
+          scan_one_integer_safely(row + j);
         }
       }
       if (__debug_input_file_descriptor__) {
@@ -185,6 +197,7 @@ void board_init() {
 
   fclose(__debug_input_file_descriptor__);
 
+  printf("\e[1;1H\e[2J");
   printf("생성된 빙고판은 다음과 같습니다.\n");
   for (i = 0; i < 5; i++) {
     for (j = 0; j < 5; j++) {
@@ -233,12 +246,12 @@ int get_input() {
   while (1) {
     if (n < 1 || n > 25) {
       printf("1 ~ 25 사이의 숫자를 입력하세요: ");
-      scanf("%d", &n);
+      scan_one_integer_safely(&n);
       continue;
     }
     if (!check[n - 1]) {
       printf("1 ~ 25 사이의 숫자 중에서 지워지지 않은 숫자를 입력하세요: ");
-      scanf("%d", &n);
+      scan_one_integer_safely(&n);
       continue;
     }
     break;
@@ -279,7 +292,6 @@ void *send_msg(void *arg) {
         m = check_bingo();
         sprintf(msg, "%d %d", n, m);
         write_safely(sock, msg);
-        print_board();
         break;
       case 2:  // 내 빙고 개수를 계산하여 보낼 차례
         m = check_bingo();
@@ -309,37 +321,41 @@ void *recv_msg(void *arg) {
     pthread_mutex_lock(&mutex_recv_msg);
 
     // 서버에서 받는 메세지 처리
-    // printf("서버로부터 응답을 기다리는 중입니다. (turn: %d)\n", turn);
     read_safely(sock, msg);
     if (strcmp(msg, MSG_CONNECTED) == 0) {
       printf("상대편과 연결이 되었습니다.\n");
       turn = 0;
     } else if (strcmp(msg, MSG_TURN) == 0) {
+      printf("\e[1;1H\e[2J");
+      print_board();
       printf("당신의 차례입니다.\n");
       turn = 1;
     } else if (strcmp(msg, MSG_NOT_TURN) == 0) {
+      printf("\e[1;1H\e[2J");
+      print_board();
       printf("상대편의 차례입니다.\n");
       turn = 2;
       pthread_mutex_unlock(&mutex_recv_msg);
       continue;
     } else if (strcmp(msg, MSG_YOU_WIN) == 0) {
+      printf("\e[1;1H\e[2J");
+      print_board();
       printf("%s\n", msg);
       pthread_mutex_unlock(&mutex_send_msg);
       turn = 3;
       return NULL;
     } else if (strcmp(msg, MSG_YOU_LOST) == 0) {
+      printf("\e[1;1H\e[2J");
+      print_board();
       printf("%s\n", msg);
       pthread_mutex_unlock(&mutex_send_msg);
       turn = 3;
       return NULL;
     } else if (strcmp(msg, MSG_KEEP_GOING_1) == 0) {  // 첫 번째 결과 대기 후 게임 지속 판정
       if (turn == 1) {
-        printf("당신이 부른 값에 따른 상대편의 결과를 기다립니다\n");
         pthread_mutex_unlock(&mutex_recv_msg);
         continue;
       }
-
-      printf("상대편의 응답을 기다립니다.\n");
 
       read_safely(sock, msg);
 
