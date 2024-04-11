@@ -1,44 +1,55 @@
-// gcc client.c -o client -D_REENTRANT -lpthread
-
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define BUF_SIZE 1024
 #define MSG_CONNECTED "Connected"
+#define MSG_READY "Ready"
 #define MSG_TURN "Turn"
 #define MSG_NOT_TURN "NotTurn"
 #define MSG_YOU_WIN "당신이 이겼습니다."
 #define MSG_YOU_LOST "당신은 패배했습니다."
-#define MSG_KEEP_GOING "KeepGoing"
+#define MSG_KEEP_GOING_1 "KeepGoing1"
+#define MSG_KEEP_GOING_2 "KeepGoing2"
 
 int board[5][5];
 int check[25];  // 빙고판에서 해당 숫자가 지워졌는지를 표시하는 배열
 int turn;       // 0 : 시작 전 or send_msg 휴식 / 1 : 자신 턴 / 2 : 상대 턴
-pthread_mutex_t mutex;
+
+char *__debug__input_file__;
+
+pthread_mutex_t mutex_send_msg;
+pthread_mutex_t mutex_recv_msg;
 
 void board_init();         // 빙고판을 입력받아서 초기화하는 함수
 int check_bingo();         // 빙고 검증 함수
 void print_board();        // 빙고판과 빙고 수를 출력하는 함수
-void check_input(int n);   // 입력받은 숫자의 유효성을 확인하고 유효하지 않으면 다시 입력 받는 함수
+int get_input();           // 입력받은 숫자의 유효성을 확인하고 유효하지 않으면 다시 입력 받는 함수
 void update_board(int n);  // 해당 숫자를 빙고판에서 지우는 함수
 
-void *send_msg(void *arg);  // 서버로 메세지를 보내는 함수 (스레드)
 void *recv_msg(void *arg);  // 서버로부터 메세지를 받는 함수 (스레드)
+void *send_msg(void *arg);  // 서버로 메세지를 보내는 함수 (스레드)
 
 int main(int argc, char *argv[]) {
   int sock;
   struct sockaddr_in serv_adr;
   pthread_t snd_thread, rcv_thread;
-  void *thread_return;
 
-  if (argc != 3) {
+  if (argc < 3) {
     printf("Usage : %s <IP> <PORT>\n", argv[0]);
     exit(1);
+  }
+
+  __debug__input_file__ = NULL;
+  if (argc == 4) {
+    __debug__input_file__ = argv[3];
   }
 
   sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -55,37 +66,86 @@ int main(int argc, char *argv[]) {
     perror("failed to connect");
     exit(1);
   }
-  printf("Connected to the server.\n");
+  printf("서버와 연결이 되었습니다.\n");
 
-  board_init();
+  pthread_mutex_init(&mutex_recv_msg, NULL);
+  pthread_mutex_init(&mutex_send_msg, NULL);
 
-  pthread_mutex_init(&mutex, NULL);
-  pthread_create(&snd_thread, NULL, send_msg, (void *)&sock);
+  pthread_mutex_lock(&mutex_send_msg);
   pthread_create(&rcv_thread, NULL, recv_msg, (void *)&sock);
-  pthread_join(snd_thread, &thread_return);
-  pthread_join(rcv_thread, &thread_return);
-  pthread_mutex_destroy(&mutex);
+  pthread_create(&snd_thread, NULL, send_msg, (void *)&sock);
+
+  pthread_join(rcv_thread, NULL);
+  pthread_join(snd_thread, NULL);
+
+  pthread_mutex_destroy(&mutex_recv_msg);
+  pthread_mutex_destroy(&mutex_send_msg);
 
   close(sock);
 
   return 0;
 }
 
+void read_safely(int sock, char *buf) {
+  int total_len, len;
+  char c = 1;
+
+  total_len = 0;
+  while (c != 0) {
+    len = read(sock, &c, 1);
+    if (len == 0) {
+      printf("Disconnected from the server.\n");
+      abort();
+    }
+    if (len == -1) {
+      perror("Failed to read from the server");
+      abort();
+    }
+    if (c) {
+      total_len += 1;
+      buf[total_len - 1] = c;
+    }
+  }
+  buf[total_len] = 0;
+  printf("서버로부터 다음의 값을 수신했습니다: %s (%d)\n", buf, total_len);
+}
+
+void write_safely(int sock, const char *message) {
+  int result = write(sock, message, strlen(message) + 1);
+  if (result == -1) {
+    perror("Failed to write to the client.");
+    abort();
+  };
+  printf("서버로 다음의 값을 송신했습니다: %s (%d)\n", message, result);
+}
+
 void board_init() {
   int i, j;
-  int row[5], mark[25];
+  int row[5];
   int out_of_range = 0;
   int duplicated = 0;
+  FILE *__debug_input_file_descriptor__ = NULL;
+
+  if (__debug__input_file__) {
+    __debug_input_file_descriptor__ = fopen(__debug__input_file__, "r");
+  }
 
   while (1) {
-    memset(mark, 0, sizeof(mark));
+    memset(check, 0, sizeof(check));
 
     printf("5x5 크기의 빙고판을 한 행씩 입력해주세요.\n");
     printf("빙고판에는 1 ~ 25 사이의 숫자가 중복되지 않게 들어가야 합니다.\n");
     for (int i = 0; i < 5; i++) {
       printf("%d번째 행을 입력해주세요: ", i + 1);
       for (int j = 0; j < 5; j++) {
-        scanf("%d", row + j);
+        if (__debug_input_file_descriptor__) {
+          fscanf(__debug_input_file_descriptor__, "%d", row + j);
+        } else {
+          scanf("%d", row + j);
+        }
+      }
+      if (__debug_input_file_descriptor__) {
+        printf("DONE\n");
       }
 
       for (j = 0; j < 5; j++) {
@@ -104,12 +164,12 @@ void board_init() {
 
       for (j = 0; j < 5; j++) {
         board[i][j] = row[j];
-        mark[row[j] - 1] += 1;
+        check[row[j] - 1] += 1;
       }
     }
 
     for (i = 0; i < 25; i++) {
-      if (mark[i] > 1) {
+      if (check[i] > 1) {
         printf("중복되지 않은 숫자로 빙고판을 생성해주세요. 입력하신 빙고판에는 값 %d(이)가 중복됩니다.\n\n", i + 1);
         duplicated = 1;
         break;
@@ -122,6 +182,8 @@ void board_init() {
 
     break;
   }
+
+  fclose(__debug_input_file_descriptor__);
 
   printf("생성된 빙고판은 다음과 같습니다.\n");
   for (i = 0; i < 5; i++) {
@@ -165,7 +227,9 @@ void print_board() {
   printf("현재 빙고 수: %d\n\n", check_bingo());
 }
 
-void check_input(int n) {
+int get_input() {
+  int n = -1;
+
   while (1) {
     if (n < 1 || n > 25) {
       printf("1 ~ 25 사이의 숫자를 입력하세요: ");
@@ -179,6 +243,8 @@ void check_input(int n) {
     }
     break;
   }
+
+  return n;
 }
 
 void update_board(int n) {
@@ -197,37 +263,38 @@ void *send_msg(void *arg) {
   int sock = *((int *)arg);
   char msg[BUF_SIZE];
   int input = -1;
+  int n, m;
 
   while (1) {
-    fgets(msg, BUF_SIZE, stdin);
-    if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n")) {
-      close(sock);
-      exit(0);
+    pthread_mutex_lock(&mutex_send_msg);
+
+    switch (turn) {
+      case 0:  // 빙고판 입력을 받을 차례, 준비가 되면 서버로 메시지를 보낸다.
+        board_init();
+        write_safely(sock, MSG_READY);
+        break;
+      case 1:  // 지울 칸을 입력 받을 차례
+        n = get_input();
+        update_board(n);
+        m = check_bingo();
+        sprintf(msg, "%d %d", n, m);
+        write_safely(sock, msg);
+        print_board();
+        break;
+      case 2:  // 내 빙고 개수를 계산하여 보낼 차례
+        m = check_bingo();
+        sprintf(msg, "%d", m);
+        write_safely(sock, msg);
+        break;
+      case 3:  // 게임이 종료됐을 때
+        pthread_mutex_unlock(&mutex_recv_msg);
+        return NULL;
+      default:
+        printf("올바르지 않은 차례 값입니다: %d\n", turn);
+        abort();
     }
 
-    if (turn == 1) {               // 자신의 턴일때
-      pthread_mutex_lock(&mutex);  // mutex lock
-      print_board();               // 보드 출력
-
-      input = atoi(msg);                  // string형인 msg를 int형으로
-      check_input(input);                 // 값 입력
-      update_board(input);                // 값 보드에 업데이트
-      sprintf(msg, "%d", input);          // int형인 input을 string으로
-      write(sock, msg, strlen(msg));      // msg 전송
-      sprintf(msg, "%d", check_bingo());  // 몇줄 빙고인지 msg에 입력
-      write(sock, msg, strlen(msg));      // msg 전송
-      turn = 0;                           // 턴 값 초기화
-      pthread_mutex_unlock(&mutex);       // mutex unlock
-    } else if (turn == 2) {               // 상대의 턴일때
-      // pthread_mutex_lock(&mutex);        // mutex lock
-      // sprintf(msg, "%d", check_bingo()); // 몇줄 빙고인지 msg에 입력
-      // write(sock, msg, strlen(msg));     // msg 전송
-      // turn = 0;                          // 턴 값 초기화
-      // pthread_mutex_unlock(&mutex);      // mutex unlock
-      fputs("상대방의 턴입니다. 기다려주세요.\n", stdout);
-    } else {
-      fputs("상대방의 턴입니다. 기다려주세요.\n", stdout);
-    }
+    pthread_mutex_unlock(&mutex_recv_msg);
   }
 
   return NULL;
@@ -236,43 +303,64 @@ void *send_msg(void *arg) {
 void *recv_msg(void *arg) {
   int sock = *((int *)arg);
   char msg[BUF_SIZE];
-  char output[BUF_SIZE + 20];
-  int str_len;
+  int str_len, n;
 
   while (1) {
-    str_len = read(sock, msg, BUF_SIZE - 1);
-    if (str_len == -1) {
-      perror("failed to read from the server");
-      return NULL;
-    }
-    msg[str_len] = 0;
+    pthread_mutex_lock(&mutex_recv_msg);
 
     // 서버에서 받는 메세지 처리
+    printf("서버로부터 응답을 기다리는 중입니다. (turn: %d)\n", turn);
+    read_safely(sock, msg);
     if (strcmp(msg, MSG_CONNECTED) == 0) {
-      fputs(msg, stdout);
+      printf("상대편과 연결이 되었습니다.\n");
+      turn = 0;
     } else if (strcmp(msg, MSG_TURN) == 0) {
+      printf("당신의 차례입니다.\n");
       turn = 1;
     } else if (strcmp(msg, MSG_NOT_TURN) == 0) {
+      printf("상대편의 차례입니다.\n");
       turn = 2;
+      pthread_mutex_unlock(&mutex_recv_msg);
+      continue;
     } else if (strcmp(msg, MSG_YOU_WIN) == 0) {
-      fputs(msg, stdout);
-      break;
+      printf("%s\n", msg);
+      pthread_mutex_unlock(&mutex_send_msg);
+      turn = 3;
+      return NULL;
     } else if (strcmp(msg, MSG_YOU_LOST) == 0) {
-      fputs(msg, stdout);
-      break;
-    }
-    // 숫자를 받았을 때 처리: 상대방이 보낸 숫자를 받아서 보드에 업데이트하고 빙고 수를 체크한 후 빙고 수를 보냄
-    else {
-      sprintf(output, "상대의숫자: %s", msg);
-      fputs(output, stdout);
-      update_board(atoi(msg));
-      print_board();
+      printf("%s\n", msg);
+      pthread_mutex_unlock(&mutex_send_msg);
+      turn = 3;
+      return NULL;
+    } else if (strcmp(msg, MSG_KEEP_GOING_1) == 0) {  // 첫 번째 결과 대기 후 게임 지속 판정
+      if (turn == 1) {
+        printf("당신이 부른 값에 따른 상대편의 결과를 기다립니다\n");
+        pthread_mutex_unlock(&mutex_recv_msg);
+        continue;
+      }
 
-      pthread_mutex_lock(&mutex);  // mutex lock
-      sprintf(msg, "%d", check_bingo());
-      write(sock, msg, strlen(msg));
-      pthread_mutex_unlock(&mutex);  // mutex unlock
+      printf("상대편의 응답을 기다립니다.\n");
+
+      read_safely(sock, msg);
+
+      n = atoi(msg);
+      if (n == 0) {
+        printf("상대편이 부른 값을 제대로 불러오지 못 했습니다.\n");
+        return NULL;
+      }
+      printf("상대편은 %d(을)를 불렀습니다.\n", n);
+
+      update_board(n);
+      print_board();
+    } else if (strcmp(msg, MSG_KEEP_GOING_2) == 0) {  // 두 번째 결과 대기 후 게임 지속 판정
+      pthread_mutex_unlock(&mutex_recv_msg);
+      continue;
+    } else {
+      printf("처리되지 않은 메시지입니다: %s\n", msg);
+      abort();
     }
+
+    pthread_mutex_unlock(&mutex_send_msg);
   }
 
   return NULL;
