@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc index.ts",
-    "start": "tsc index.ts && node index.js"
+    "build": "tsc",
+    "start": "tsc && node ./build/index.js"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
