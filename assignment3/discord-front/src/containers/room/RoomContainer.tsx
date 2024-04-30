@@ -22,7 +22,7 @@ export function RoomContainer({ nickname }: Props) {
         <CamSharing />
       </div>
       <div className="chat-area">
-        <Chatting />
+        <Chatting nickname={nickname} />
       </div>
     </div>
   );
