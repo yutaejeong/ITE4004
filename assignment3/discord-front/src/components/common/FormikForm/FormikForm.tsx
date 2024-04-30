@@ -37,7 +37,11 @@ export function FormikForm<T extends FormikValues>({
               <FormControl
                 isInvalid={form.errors[filedName] && form.touched[filedName]}
               >
-                <Input {...field} placeholder={placeholder} />
+                <Input
+                  {...field}
+                  placeholder={placeholder}
+                  autoComplete="off"
+                />
                 <FormErrorMessage>{form.errors[filedName]}</FormErrorMessage>
               </FormControl>
             )}
