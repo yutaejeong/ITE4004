@@ -7,7 +7,7 @@
     "voice chat"
     "control chat";
   grid-template-columns: 228px 1fr;
-  grid-template-rows: calc(50dvh - 64px) calc(50dvh - 84px) 84px;
+  grid-template-rows: calc(50dvh - 64px) calc(50dvh - 124px) 124px;
   gap: 12px;
   padding: 20px;
 }

@@ -12,7 +12,7 @@ export function VoiceSharing() {
   return (
     <Card className="voice-card">
       <CardHeader>
-        <Heading size="md">Members</Heading>
+        <Heading size="md">Voices</Heading>
       </CardHeader>
       <CardBody>
         <Stack divider={<StackDivider />} spacing={4}>
