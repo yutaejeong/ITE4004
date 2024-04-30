@@ -3,11 +3,7 @@ import { Control } from "../../components/room/Control";
 import { usePreventReload } from "../../hooks/usePreventReload";
 import "./RoomContainer.css";
 
-interface Props {
-  nickname: string;
-}
-
-export function RoomContainer({ nickname }: Props) {
+export function RoomContainer() {
   usePreventReload();
 
   return (
@@ -22,7 +18,7 @@ export function RoomContainer({ nickname }: Props) {
         <CamSharing />
       </div>
       <div className="chat-area">
-        <Chatting nickname={nickname} />
+        <Chatting />
       </div>
     </div>
   );

@@ -1,23 +1,26 @@
 import { Heading } from "@chakra-ui/react";
 import { FormikHelpers } from "formik";
-import { Dispatch, SetStateAction } from "react";
+import { useSetAtom } from "jotai";
+import { nanoid } from "nanoid";
+import { userAtom } from "../../atoms/user";
 import { FormikForm } from "../../components/common";
 import "./LoginContainer.css";
-
-interface Props {
-  setNickname: Dispatch<SetStateAction<string>>;
-}
 
 interface FormikValue {
   nickname: string;
 }
 
-export function LoginContainer({ setNickname }: Props) {
+export function LoginContainer() {
+  const setUser = useSetAtom(userAtom);
+
   const onSubmit = (
     values: FormikValue,
     _actions: FormikHelpers<FormikValue>,
   ) => {
-    setNickname(values.nickname);
+    setUser({
+      nickname: values.nickname,
+      uuid: nanoid(),
+    });
   };
 
   const validateName = (value: string) => {
