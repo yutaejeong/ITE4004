@@ -6,9 +6,15 @@ import {
   Stack,
   StackDivider,
 } from "@chakra-ui/react";
+import { useAtomValue } from "jotai";
+import { voiceConfigAtom } from "../../../atoms/control";
 import "./VoiceSharing.css";
 
 export function VoiceSharing() {
+  const isVoiceOn = useAtomValue(voiceConfigAtom);
+
+  console.log(isVoiceOn);
+
   return (
     <Card className="voice-card">
       <CardHeader>

@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
+import { DefaultDataType } from "../types/common";
 
 type CommunicationType = "chat" | "voice" | "camera";
-
-interface DefaultDataType {
-  sender: string;
-}
 
 interface Props<DataType extends DefaultDataType> {
   communicationType: CommunicationType;

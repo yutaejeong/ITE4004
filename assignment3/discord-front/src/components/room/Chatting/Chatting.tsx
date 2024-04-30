@@ -1,26 +1,26 @@
 import { Card, CardBody, Heading } from "@chakra-ui/react";
 import { FieldValidator, FormikHelpers } from "formik";
-import moment from "moment";
+import { useAtomValue } from "jotai";
+import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { userAtom } from "../../../atoms/user";
 import { useCommunicate } from "../../../hooks/useCommunicate";
+import { User } from "../../../types/common";
 import { FormikForm } from "../../common";
 import "./Chatting.css";
-
-interface Props {
-  nickname: string;
-}
 
 interface FormikValue {
   message: string;
 }
 
 interface MessageType {
-  sender: string;
+  sender: User;
   message: string;
-  timestamp: number;
+  message_id: string;
 }
 
-export function Chatting({ nickname }: Props) {
+export function Chatting() {
+  const nickname = useAtomValue(userAtom);
   const [received, setReceived] = useState<MessageType[]>([]);
   const historyRef = useRef<HTMLDivElement>(null);
   const onReceive = useCallback((receivedData: MessageType) => {
@@ -49,7 +49,7 @@ export function Chatting({ nickname }: Props) {
     const message = {
       sender: nickname,
       message: values.message,
-      timestamp: moment().unix(),
+      message_id: nanoid(),
     };
     sendMessage(message);
     actions.setSubmitting(false);
@@ -68,8 +68,8 @@ export function Chatting({ nickname }: Props) {
         <Heading size="md">Messages</Heading>
         <div className="history" ref={historyRef}>
           {received.map((message) => (
-            <p className="message" key={message.timestamp}>
-              <span className="sender">[{message.sender}]</span>
+            <p className="message" key={message.message_id}>
+              <span className="sender">[{message.sender.nickname}]</span>
               {message.message}
             </p>
           ))}

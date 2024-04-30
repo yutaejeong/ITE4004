@@ -1,11 +1,13 @@
 import { useColorMode } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { LoginContainer } from "./containers/login/LoginContainer";
 import { RoomContainer } from "./containers/room/RoomContainer";
+import { useAtomValue } from "jotai";
+import { userAtom } from "./atoms/user";
 
 function App() {
+  const { nickname } = useAtomValue(userAtom);
   const { colorMode, toggleColorMode } = useColorMode();
-  const [nickname, setNickname] = useState<string>("");
 
   useEffect(() => {
     if (colorMode === "light") {
@@ -13,11 +15,7 @@ function App() {
     }
   }, [colorMode, toggleColorMode]);
 
-  return nickname ? (
-    <RoomContainer nickname={nickname} />
-  ) : (
-    <LoginContainer setNickname={setNickname} />
-  );
+  return nickname ? <RoomContainer /> : <LoginContainer />;
 }
 
 export default App;
