@@ -1,12 +1,15 @@
 import { useColorMode } from "@chakra-ui/react";
+import { useAtomValue } from "jotai";
 import { useEffect } from "react";
+import { channelAtom } from "./atoms/channel";
+import { userAtom } from "./atoms/user";
 import { LoginContainer } from "./containers/login/LoginContainer";
 import { RoomContainer } from "./containers/room/RoomContainer";
-import { useAtomValue } from "jotai";
-import { userAtom } from "./atoms/user";
+import { CHannelContainer } from "./containers/channels/ChannelContainer";
 
 function App() {
   const { nickname } = useAtomValue(userAtom);
+  const channel = useAtomValue(channelAtom);
   const { colorMode, toggleColorMode } = useColorMode();
 
   useEffect(() => {
@@ -15,7 +18,15 @@ function App() {
     }
   }, [colorMode, toggleColorMode]);
 
-  return nickname ? <RoomContainer /> : <LoginContainer />;
+  if (!nickname) {
+    return <LoginContainer />;
+  }
+
+  if (!channel) {
+    return <CHannelContainer />;
+  }
+
+  return <RoomContainer />;
 }
 
 export default App;

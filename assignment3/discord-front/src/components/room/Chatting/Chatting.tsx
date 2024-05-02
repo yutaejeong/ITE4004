@@ -3,6 +3,7 @@ import { FieldValidator, FormikHelpers } from "formik";
 import { useAtomValue } from "jotai";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { channelAtom } from "../../../atoms/channel";
 import { userAtom } from "../../../atoms/user";
 import { useCommunicate } from "../../../hooks/useCommunicate";
 import { User } from "../../../types/common";
@@ -21,12 +22,14 @@ interface MessageType {
 
 export function Chatting() {
   const nickname = useAtomValue(userAtom);
+  const channel_id = useAtomValue(channelAtom);
   const [received, setReceived] = useState<MessageType[]>([]);
   const historyRef = useRef<HTMLDivElement>(null);
   const onReceive = useCallback((receivedData: MessageType) => {
     setReceived((prev) => [...prev, receivedData]);
   }, []);
   const { sendMessage, getWSStatus } = useCommunicate<MessageType>({
+    channel_id,
     communicationType: "chat",
     onReceive,
   });

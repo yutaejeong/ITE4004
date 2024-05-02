@@ -4,11 +4,13 @@ import { DefaultDataType } from "../types/common";
 type CommunicationType = "chat" | "voice" | "camera";
 
 interface Props<DataType extends DefaultDataType> {
+  channel_id: string;
   communicationType: CommunicationType;
   onReceive: (receivedData: DataType) => void;
 }
 
 export function useCommunicate<DataType extends DefaultDataType>({
+  channel_id,
   communicationType,
   onReceive,
 }: Props<DataType>) {
@@ -23,7 +25,7 @@ export function useCommunicate<DataType extends DefaultDataType>({
 
   useEffect(() => {
     const ws = new WebSocket(
-      `${process.env.REACT_APP_WS_SERVER!}/${communicationType}`,
+      `${process.env.REACT_APP_WS_SERVER!}/${channel_id}/${communicationType}`,
     );
 
     wsRef.current = ws;
@@ -38,7 +40,7 @@ export function useCommunicate<DataType extends DefaultDataType>({
         ws.close();
       }
     };
-  }, [communicationType, onReceive]);
+  }, [channel_id, communicationType, onReceive]);
 
   return {
     sendMessage,
