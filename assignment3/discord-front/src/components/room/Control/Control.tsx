@@ -1,11 +1,13 @@
 import { Button, Card, CardBody, Heading, Stack } from "@chakra-ui/react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
+import { unselectChannelAtom } from "../../../atoms/channel";
 import { cameraConfigAtom, voiceConfigAtom } from "../../../atoms/control";
 import "./Control.css";
 
 export function Control() {
   const [isCameraOn, setIsCameraOn] = useAtom(cameraConfigAtom);
   const [isVoiceOn, setIsVoiceOn] = useAtom(voiceConfigAtom);
+  const unselectChannel = useSetAtom(unselectChannelAtom);
 
   return (
     <Card className="control-card">
@@ -18,6 +20,7 @@ export function Control() {
           <Button onClick={() => setIsVoiceOn((prev) => !prev)}>
             {isVoiceOn ? "마이크 끄기" : "마이크 켜기"}
           </Button>
+          <Button onClick={() => unselectChannel()}>채널 나가기</Button>
         </Stack>
       </CardBody>
     </Card>

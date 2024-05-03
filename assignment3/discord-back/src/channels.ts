@@ -62,11 +62,26 @@ ws_channels.on("connection", function connection(ws) {
       case "delete":
         if (data.channel_id) {
           if (channels[data.channel_id].owner === data.requester) {
+            channels[data.channel_id].chat.clients.forEach(
+              function each(client) {
+                client.close();
+              },
+            );
             channels[data.channel_id].chat.close();
+            channels[data.channel_id].voice.clients.forEach(
+              function each(client) {
+                client.close();
+              },
+            );
             channels[data.channel_id].voice.close();
+            channels[data.channel_id].camera.clients.forEach(
+              function each(client) {
+                client.close();
+              },
+            );
             channels[data.channel_id].camera.close();
+            delete channels[data.channel_id];
           }
-          delete channels[data.channel_id];
         }
         break;
     }
