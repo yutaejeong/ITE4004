@@ -1,9 +1,10 @@
-import { Button } from "@chakra-ui/react";
-import "./ChannelContainer.css";
-import { useEffect, useRef, useState } from "react";
+import { DeleteIcon } from "@chakra-ui/icons";
+import { Button, ButtonGroup, IconButton } from "@chakra-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { userAtom } from "../../atoms/user";
+import { useEffect, useRef, useState } from "react";
 import { channelAtom } from "../../atoms/channel";
+import { userAtom } from "../../atoms/user";
+import "./ChannelContainer.css";
 
 export function CHannelContainer() {
   const wsRef = useRef<WebSocket | null>(null);
@@ -41,13 +42,33 @@ export function CHannelContainer() {
     }
   }
 
+  function deleteChannel(channel_id: string) {
+    if (wsRef.current) {
+      const message = {
+        action: "delete",
+        channel_id,
+        requester: uuid,
+      };
+      wsRef.current.send(JSON.stringify(message));
+    }
+  }
+
   return (
     <div className="container">
       <div className="channels-list">
-        {channels.map(({ channel_id }) => (
-          <Button key={channel_id} onClick={() => selectChannel(channel_id)}>
-            {channel_id}
-          </Button>
+        {channels.map(({ channel_id, owner }) => (
+          <ButtonGroup isAttached key={channel_id}>
+            <Button onClick={() => selectChannel(channel_id)}>
+              {channel_id}
+            </Button>
+            {owner === uuid && (
+              <IconButton
+                onClick={() => deleteChannel(channel_id)}
+                icon={<DeleteIcon />}
+                aria-label="delete the channel"
+              />
+            )}
+          </ButtonGroup>
         ))}
         <Button onClick={() => createNewChannel()}>Add</Button>
       </div>
