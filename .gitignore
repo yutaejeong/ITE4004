@@ -9,3 +9,6 @@ assignment3/discord-back/node_modules
 assignment3/discord-back/build
 assignment3/discord-back/index.js
 assignment3/discord-back/.env
+
+.DS_Store
+*.pem
