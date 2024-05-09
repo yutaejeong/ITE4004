@@ -1,9 +1,22 @@
+import * as fs from "fs";
+import * as path from "path";
 import { createServer } from "http";
+import { createServer as createSecureServer } from "https";
 import { channels, ws_channels } from "./channels";
 
 require("dotenv").config();
 
-const server = createServer();
+const server =
+  process.env.HTTPS === "true"
+    ? createSecureServer({
+        key: fs.readFileSync(
+          path.join(__dirname, "../certs/" + process.env.SSL_KEY_FILE),
+        ),
+        cert: fs.readFileSync(
+          path.join(__dirname, "../certs/" + process.env.SSL_CRT_FILE),
+        ),
+      })
+    : createServer();
 
 server.on("upgrade", function upgrade(request, socket, head) {
   const { pathname } = new URL(request.url!, process.env.WS_SERVER);
