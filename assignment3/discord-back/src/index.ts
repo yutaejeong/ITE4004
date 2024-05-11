@@ -61,7 +61,7 @@ server.on("upgrade", function upgrade(request, socket, head) {
     case "camera":
       const ws_camera = channels[channel_id].camera;
       ws_camera.handleUpgrade(request, socket, head, function done(ws) {
-        ws_voice.emit("connection", ws, request);
+        ws_camera.emit("connection", ws, request);
       });
       break;
     default:

@@ -16,10 +16,11 @@ export function useCommunicate<DataType extends DefaultDataType>({
 }: Props<DataType>) {
   const wsRef = useRef<WebSocket | null>(null);
 
-  const sendMessage = useCallback(
-    (sendingData: DataType) => wsRef.current?.send(JSON.stringify(sendingData)),
-    [],
-  );
+  const sendMessage = useCallback((sendingData: DataType) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current?.send(JSON.stringify(sendingData));
+    }
+  }, []);
 
   const getWSStatus = useCallback(() => wsRef.current?.readyState ?? -1, []);
 
