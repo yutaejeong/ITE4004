@@ -3,45 +3,100 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { channelAtom } from "../../../atoms/channel";
 import { cameraConfigAtom } from "../../../atoms/control";
-import { userAtom } from "../../../atoms/user";
-import { useCommunicate } from "../../../hooks/useCommunicate";
-import { User } from "../../../types/common";
 import "./CamSharing.css";
 
-interface Message {
-  data: string;
-  sender: User;
+interface Participant {
+  id: string;
+  nickname: string;
+  isCameraOn: boolean;
 }
+
+type Message =
+  | {
+      sender_id: string;
+      data: string;
+      _type: "video";
+    }
+  | {
+      sender_id: string;
+      _type: "hide";
+    }
+  | {
+      _type: "welcome";
+      id: string;
+      participants: Participant[];
+    }
+  | {
+      _type: "newbie";
+      newbie: Participant;
+    }
+  | {
+      _type: "goodbye";
+      escapee: Participant;
+    };
 
 export function CamSharing() {
   const isCameraOn = useAtomValue(cameraConfigAtom);
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const channel_id = useAtomValue(channelAtom);
-  const currentUser = useAtomValue(userAtom);
-  const [participants, setParticipants] = useState<User[]>([currentUser]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const animateFunctionRef = useRef<number | null>(null);
   const videoContainersRef = useRef<Record<string, HTMLImageElement | null>>(
     {},
   );
   const lastSendRef = useRef<number>(Date.now());
+  const wsRef = useRef<WebSocket | null>(null);
+  const idRef = useRef<string | null>(null);
 
-  const onReceive = useCallback((receivedData: Message) => {
-    if (!videoContainersRef.current[receivedData.sender.uuid]) {
-      setParticipants((prev) => [...prev, receivedData.sender]);
-    } else {
-      const img = videoContainersRef.current[receivedData.sender.uuid];
-      if (img) {
-        img.src = receivedData.data;
+  useEffect(() => {
+    const endpoint = `${process.env.REACT_APP_WS_SERVER!}/${channel_id}/camera`;
+    const ws = new WebSocket(endpoint);
+
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data) as Message;
+      switch (message._type) {
+        case "welcome":
+          idRef.current = message.id;
+          setParticipants(message.participants);
+          break;
+        case "newbie":
+          setParticipants((prev) => [
+            ...prev,
+            { ...message.newbie, isCameraOn: true },
+          ]);
+          break;
+        case "video":
+          const videoContainer = videoContainersRef.current[message.sender_id];
+          if (videoContainer) {
+            videoContainer.src = message.data;
+          }
+          break;
+        case "hide":
+          setParticipants((prev) =>
+            prev.map((participant) =>
+              participant.id === message.sender_id
+                ? { ...participant, isCameraOn: false }
+                : participant,
+            ),
+          );
+          break;
+        case "goodbye":
+          setParticipants((prev) =>
+            prev.filter((participant) => participant.id !== message.escapee.id),
+          );
+          break;
       }
-    }
-  }, []);
+    };
 
-  const { sendMessage } = useCommunicate<Message>({
-    channel_id,
-    communicationType: "camera",
-    onReceive,
-  });
+    return () => {
+      if (ws.readyState !== WebSocket.CLOSED) {
+        ws.close();
+      }
+    };
+  }, [channel_id]);
 
   async function handleTurnCameraOn() {
     try {
@@ -74,8 +129,18 @@ export function CamSharing() {
       videoRef.current.pause();
       videoRef.current.src = "";
     }
-    sendMessage({ data: "", sender: currentUser });
-  }, [currentUser, sendMessage]);
+    if (
+      wsRef.current &&
+      idRef.current &&
+      wsRef.current.readyState === WebSocket.OPEN
+    ) {
+      const hideMessage: Message = {
+        _type: "hide",
+        sender_id: idRef.current,
+      };
+      wsRef.current.send(JSON.stringify(hideMessage));
+    }
+  }, []);
 
   useEffect(() => {
     if (isCameraOn) {
@@ -102,7 +167,18 @@ export function CamSharing() {
               canvas.height,
             );
             const data = canvas.toDataURL("image/jpeg");
-            sendMessage({ data, sender: currentUser });
+            if (
+              wsRef.current &&
+              idRef.current &&
+              wsRef.current.readyState === WebSocket.OPEN
+            ) {
+              const videoMessage: Message = {
+                _type: "video",
+                data,
+                sender_id: idRef.current,
+              };
+              wsRef.current.send(JSON.stringify(videoMessage));
+            }
             lastSendRef.current = Date.now();
           }
         }
@@ -121,7 +197,7 @@ export function CamSharing() {
         cancelAnimationFrame(animateFunctionRef.current);
       }
     };
-  }, [currentUser, handleTurnCameraOff, isCameraOn, sendMessage]);
+  }, [handleTurnCameraOff, isCameraOn]);
 
   return (
     <Card className="cam-card">
@@ -131,9 +207,9 @@ export function CamSharing() {
           {participants.map((participant) => (
             <img
               className="cam-video"
-              key={participant.uuid}
+              key={participant.id}
               ref={(_ref) => {
-                videoContainersRef.current[participant.uuid] = _ref;
+                videoContainersRef.current[participant.id] = _ref;
               }}
               alt={`${participant.nickname}님의 카메라 화면`}
             />

@@ -20,8 +20,8 @@ const server =
 
 server.on("upgrade", function upgrade(request, socket, head) {
   const { pathname } = new URL(request.url!, process.env.WS_SERVER);
-  console.log(`[upgrade] ${pathname}`);
 
+  // pathname: /channels
   if (pathname === "/channels") {
     ws_channels.handleUpgrade(request, socket, head, function done(ws) {
       ws_channels.emit("connection", ws, request);
@@ -29,6 +29,7 @@ server.on("upgrade", function upgrade(request, socket, head) {
     return;
   }
 
+  // pathname: /{channel_id}/{communication_type}
   if (!/^\/[^\/]+\/[^\/]+\/?$/.test(pathname)) {
     socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
     socket.destroy();
@@ -39,14 +40,8 @@ server.on("upgrade", function upgrade(request, socket, head) {
     /^\/([^\/]+)\/([^\/]+)/,
   )!;
 
-  console.log(`[upgrade] ${channel_id} ${communication_type}`);
-
   switch (communication_type) {
     case "chat":
-      console.log("[upgrade]");
-      Object.entries(channels).forEach((channel) => {
-        console.log(`\t${channel[0]}`);
-      });
       const ws_chat = channels[channel_id].chat;
       ws_chat.handleUpgrade(request, socket, head, function done(ws) {
         ws_chat.emit("connection", ws, request);
