@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { channelAtom } from "../../../atoms/channel";
 import { cameraConfigAtom } from "../../../atoms/control";
+import { userAtom } from "../../../atoms/user";
 import "./CamSharing.css";
 
 interface Participant {
@@ -27,6 +28,11 @@ type Message =
       participants: Participant[];
     }
   | {
+      _type: "introduce";
+      id: string;
+      nickname: string;
+    }
+  | {
       _type: "newbie";
       newbie: Participant;
     }
@@ -48,6 +54,7 @@ export function CamSharing() {
   const lastSendRef = useRef<number>(Date.now());
   const wsRef = useRef<WebSocket | null>(null);
   const idRef = useRef<string | null>(null);
+  const { nickname } = useAtomValue(userAtom);
 
   useEffect(() => {
     const endpoint = `${process.env.REACT_APP_WS_SERVER!}/${channel_id}/camera`;
@@ -60,7 +67,19 @@ export function CamSharing() {
       switch (message._type) {
         case "welcome":
           idRef.current = message.id;
-          setParticipants(message.participants);
+          setParticipants(
+            message.participants.map((participant) =>
+              participant.id === message.id
+                ? { ...participant, nickname }
+                : participant,
+            ),
+          );
+          const introduceMessage: Message = {
+            _type: "introduce",
+            id: message.id,
+            nickname,
+          };
+          ws.send(JSON.stringify(introduceMessage));
           break;
         case "newbie":
           setParticipants((prev) => [
@@ -96,7 +115,7 @@ export function CamSharing() {
         ws.close();
       }
     };
-  }, [channel_id]);
+  }, [channel_id, nickname]);
 
   async function handleTurnCameraOn() {
     try {
@@ -205,14 +224,16 @@ export function CamSharing() {
         <Heading size="md">Cameras</Heading>
         <div className="cam-video-list">
           {participants.map((participant) => (
-            <img
-              className="cam-video"
-              key={participant.id}
-              ref={(_ref) => {
-                videoContainersRef.current[participant.id] = _ref;
-              }}
-              alt={`${participant.nickname}님의 카메라 화면`}
-            />
+            <div key={participant.id} className="cam-video-wrapper">
+              <img
+                className="cam-video"
+                ref={(_ref) => {
+                  videoContainersRef.current[participant.id] = _ref;
+                }}
+                alt={`${participant.nickname}님의 카메라 화면`}
+              />
+              <span className="cam-video-label">{participant.nickname}</span>
+            </div>
           ))}
         </div>
       </CardBody>
