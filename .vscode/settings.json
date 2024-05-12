@@ -3,6 +3,7 @@
   "editor.defaultFormatter": "ms-vscode.cpptools",
   "cSpell.words": [
     "chakra",
-    "Formik"
+    "Formik",
+    "uuidv"
   ]
 }

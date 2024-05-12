@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
-import { create_websocket_camera } from "./camera";
+import { CameraWebSocketServer } from "./camera.js";
 import { create_websocket_chat } from "./chat";
 import { create_websocket_voice } from "./voice";
 
@@ -20,11 +20,6 @@ export const channels: Record<string, Channel> = {};
 
 export const ws_channels = new WebSocketServer({ noServer: true });
 
-async function generateId() {
-  const { nanoid } = await import("nanoid");
-  return nanoid();
-}
-
 async function sendCurrentChannels(ws: WebSocket) {
   const channel_list = Object.entries(channels).map(
     ([channel_id, channel]) => ({
@@ -38,26 +33,22 @@ async function sendCurrentChannels(ws: WebSocket) {
 ws_channels.on("connection", function connection(ws) {
   ws.on("error", console.error);
 
-  ws.on("message", async function message(_data) {
-    console.log(`[message]\n${_data}`);
-
+  ws.on("message", function message(_data) {
     const data: DataType = JSON.parse(_data.toString());
     switch (data.action) {
       case "create":
-        const channel_id = await generateId();
+        const { v4: uuidv4 } = require("uuid");
+        const channel_id = uuidv4();
         const owner = data.requester;
         const chat = create_websocket_chat();
         const voice = create_websocket_voice();
-        const camera = create_websocket_camera();
+        const camera = new CameraWebSocketServer();
         channels[channel_id] = {
           owner,
           chat,
           voice,
-          camera,
+          camera: camera.ws_camera,
         };
-        console.log("a channel is created");
-        console.log(`\tchannel_id: ${channel_id}`);
-        console.log(`\towner: ${owner}`);
         break;
       case "delete":
         if (data.channel_id) {

@@ -1,20 +1,90 @@
 import { WebSocketServer } from "ws";
 import WebSocket = require("ws");
 
-export function create_websocket_camera() {
-  const ws_camera = new WebSocketServer({ noServer: true });
+interface Participant {
+  id: string;
+  nickname: string;
+  isCameraOn: boolean;
+}
 
-  ws_camera.on("connection", function connection(ws) {
-    ws.on("error", console.error);
+export type Message =
+  | {
+      _type: "welcome";
+      id: string;
+      participants: Participant[];
+    }
+  | {
+      _type: "newbie";
+      newbie: Participant;
+    }
+  | {
+      _type: "goodbye";
+      escapee: Participant;
+    };
 
-    ws.on("message", function message(data, isBinary) {
-      ws_camera.clients.forEach(function each(client) {
+export class CameraWebSocketServer {
+  ws_camera: WebSocketServer;
+  participants: Record<string, Participant> = {};
+
+  constructor() {
+    this.ws_camera = new WebSocketServer({ noServer: true });
+
+    this.ws_camera.on("connection", (ws) => {
+      const { v4: uuidv4 } = require("uuid");
+      const clientId = uuidv4();
+      console.log("Client connected: ", clientId);
+
+      this.participants[clientId] = {
+        isCameraOn: false,
+        nickname: "",
+        id: clientId,
+      };
+
+      const welcomeMessage: Message = {
+        _type: "welcome",
+        id: clientId,
+        participants: Object.values(this.participants),
+      };
+      ws.send(JSON.stringify(welcomeMessage));
+
+      const newbieMessage: Message = {
+        _type: "newbie",
+        newbie: this.participants[clientId],
+      };
+      this.ws_camera.clients.forEach((client) => {
+        if (client === ws) return;
         if (client.readyState === WebSocket.OPEN) {
-          client.send(data, { binary: isBinary });
+          client.send(JSON.stringify(newbieMessage));
         }
       });
-    });
-  });
 
-  return ws_camera;
+      ws.on("error", console.error);
+
+      ws.on("open", () => {
+        console.log("client open: ", clientId);
+      });
+
+      ws.on("message", (data, isBinary) => {
+        this.ws_camera.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(data, { binary: isBinary });
+          }
+        });
+      });
+
+      ws.on("close", () => {
+        console.log("Client disconnected: ", clientId);
+        const goodbyeMessage: Message = {
+          _type: "goodbye",
+          escapee: this.participants[clientId],
+        };
+        this.ws_camera.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(goodbyeMessage));
+          }
+        });
+        delete this.participants[clientId];
+      });
+    });
+  }
 }
