@@ -14,6 +14,11 @@ export type Message =
       participants: Participant[];
     }
   | {
+      _type: "introduce";
+      id: string;
+      nickname: string;
+    }
+  | {
       _type: "newbie";
       newbie: Participant;
     }
@@ -47,16 +52,18 @@ export class CameraWebSocketServer {
       };
       ws.send(JSON.stringify(welcomeMessage));
 
-      const newbieMessage: Message = {
-        _type: "newbie",
-        newbie: this.participants[clientId],
+      const introduceNewbie = () => {
+        const newbieMessage: Message = {
+          _type: "newbie",
+          newbie: this.participants[clientId],
+        };
+        this.ws_camera.clients.forEach((client) => {
+          if (client === ws) return;
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(newbieMessage));
+          }
+        });
       };
-      this.ws_camera.clients.forEach((client) => {
-        if (client === ws) return;
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(newbieMessage));
-        }
-      });
 
       ws.on("error", console.error);
 
@@ -65,11 +72,21 @@ export class CameraWebSocketServer {
       });
 
       ws.on("message", (data, isBinary) => {
-        this.ws_camera.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(data, { binary: isBinary });
+        if (!isBinary) {
+          const message = JSON.parse(data.toString()) as Message;
+          switch (message._type) {
+            case "introduce":
+              this.participants[message.id].nickname = message.nickname;
+              introduceNewbie();
+              break;
+            default:
+              this.ws_camera.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(data, { binary: isBinary });
+                }
+              });
           }
-        });
+        }
       });
 
       ws.on("close", () => {
