@@ -37,13 +37,6 @@ export class CameraWebSocketServer {
     this.ws_camera.on("connection", (ws) => {
       const { v4: uuidv4 } = require("uuid");
       const clientId = uuidv4();
-      console.log("Client connected: ", clientId);
-
-      this.participants[clientId] = {
-        isCameraOn: false,
-        nickname: "",
-        id: clientId,
-      };
 
       const welcomeMessage: Message = {
         _type: "welcome",
@@ -52,13 +45,18 @@ export class CameraWebSocketServer {
       };
       ws.send(JSON.stringify(welcomeMessage));
 
+      this.participants[clientId] = {
+        isCameraOn: false,
+        nickname: "",
+        id: clientId,
+      };
+
       const introduceNewbie = () => {
         const newbieMessage: Message = {
           _type: "newbie",
           newbie: this.participants[clientId],
         };
         this.ws_camera.clients.forEach((client) => {
-          if (client === ws) return;
           if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(newbieMessage));
           }
@@ -66,10 +64,6 @@ export class CameraWebSocketServer {
       };
 
       ws.on("error", console.error);
-
-      ws.on("open", () => {
-        console.log("client open: ", clientId);
-      });
 
       ws.on("message", (data, isBinary) => {
         if (!isBinary) {
@@ -90,7 +84,6 @@ export class CameraWebSocketServer {
       });
 
       ws.on("close", () => {
-        console.log("Client disconnected: ", clientId);
         const goodbyeMessage: Message = {
           _type: "goodbye",
           escapee: this.participants[clientId],
