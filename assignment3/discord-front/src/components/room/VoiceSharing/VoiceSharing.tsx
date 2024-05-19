@@ -128,14 +128,6 @@ export function VoiceSharing() {
           playAudio(url).finally(() => {
             URL.revokeObjectURL(url);
           });
-          document
-            .querySelectorAll(`.voice-${message.sender_id}`)
-            .forEach((el) => {
-              el.classList.add("voice-active");
-              setTimeout(() => {
-                el.classList.remove("voice-active");
-              }, 1000);
-            });
           break;
         case "hide":
           setParticipants((prev) =>
@@ -170,7 +162,6 @@ export function VoiceSharing() {
     };
   }, [channel_id, nickname]);
 
-  // Turn on the mic and deliver the voice through the websocket (wsRef.current) every 1000 / 30 ms.
   async function handleVoiceOn() {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -245,12 +236,13 @@ export function VoiceSharing() {
       </CardHeader>
       <CardBody>
         <Stack divider={<StackDivider />} spacing={4}>
-          {participants.map((participant) => (
-            <div className={`voice-${participant.id}`} key={participant.id}>
-              {participant.nickname}
-              {participant.isVoiceOn ? "🔊" : "🔇"}
-            </div>
-          ))}
+          {participants.map((participant) =>
+            participant.isVoiceOn ? (
+              <div className={`voice-${participant.id}`} key={participant.id}>
+                {participant.nickname}
+              </div>
+            ) : null,
+          )}
         </Stack>
       </CardBody>
     </Card>
