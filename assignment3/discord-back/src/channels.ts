@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { CameraWebSocketServer } from "./camera.js";
 import { create_websocket_chat } from "./chat";
-import { create_websocket_voice } from "./voice";
+import { VoiceWebSocketServer } from "./voice";
 
 interface Channel {
   owner: string;
@@ -41,12 +41,12 @@ ws_channels.on("connection", function connection(ws) {
         const channel_id = uuidv4();
         const owner = data.requester;
         const chat = create_websocket_chat();
-        const voice = create_websocket_voice();
+        const voice = new VoiceWebSocketServer();
         const camera = new CameraWebSocketServer();
         channels[channel_id] = {
           owner,
           chat,
-          voice,
+          voice: voice.ws_voice,
           camera: camera.ws_camera,
         };
         break;
