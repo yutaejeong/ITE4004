@@ -14,13 +14,17 @@ interface Participant {
 
 type Message =
   | {
+      _type: "video";
       sender_id: string;
       data: string;
-      _type: "video";
     }
   | {
-      sender_id: string;
       _type: "hide";
+      sender_id: string;
+    }
+  | {
+      _type: "show";
+      sender_id: string;
     }
   | {
       _type: "welcome";
@@ -67,13 +71,7 @@ export function CamSharing() {
       switch (message._type) {
         case "welcome":
           idRef.current = message.id;
-          setParticipants(
-            message.participants.map((participant) =>
-              participant.id === message.id
-                ? { ...participant, nickname }
-                : participant,
-            ),
-          );
+          setParticipants(message.participants);
           const introduceMessage: Message = {
             _type: "introduce",
             id: message.id,
@@ -84,7 +82,7 @@ export function CamSharing() {
         case "newbie":
           setParticipants((prev) => [
             ...prev,
-            { ...message.newbie, isCameraOn: true },
+            { ...message.newbie, isCameraOn: false },
           ]);
           break;
         case "video":
@@ -98,6 +96,15 @@ export function CamSharing() {
             prev.map((participant) =>
               participant.id === message.sender_id
                 ? { ...participant, isCameraOn: false }
+                : participant,
+            ),
+          );
+          break;
+        case "show":
+          setParticipants((prev) =>
+            prev.map((participant) =>
+              participant.id === message.sender_id
+                ? { ...participant, isCameraOn: true }
                 : participant,
             ),
           );
@@ -132,6 +139,14 @@ export function CamSharing() {
         videoRef.current?.play();
       };
       streamRef.current = stream;
+
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const showMessage: Message = {
+          _type: "show",
+          sender_id: idRef.current!,
+        };
+        wsRef.current.send(JSON.stringify(showMessage));
+      }
     } catch (e) {
       alert("권한을 확인해주세요.");
     }
@@ -223,18 +238,23 @@ export function CamSharing() {
       <CardBody className="cam-body">
         <Heading size="md">Cameras</Heading>
         <div className="cam-video-list">
-          {participants.map((participant) => (
-            <div key={participant.id} className="cam-video-wrapper">
-              <img
-                className="cam-video"
-                ref={(_ref) => {
-                  videoContainersRef.current[participant.id] = _ref;
-                }}
-                alt={`${participant.nickname}님의 카메라 화면`}
-              />
-              <span className="cam-video-label">{participant.nickname}</span>
-            </div>
-          ))}
+          {participants.map((participant) =>
+            participant.isCameraOn ? (
+              <div
+                key={`camera-${participant.id}`}
+                className="cam-video-wrapper"
+              >
+                <img
+                  className="cam-video"
+                  ref={(_ref) => {
+                    videoContainersRef.current[participant.id] = _ref;
+                  }}
+                  alt={`${participant.nickname}님의 카메라 화면`}
+                />
+                <span className="cam-video-label">{participant.nickname}</span>
+              </div>
+            ) : null,
+          )}
         </div>
       </CardBody>
     </Card>
