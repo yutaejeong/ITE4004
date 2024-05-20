@@ -1,12 +1,6 @@
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Heading,
-  Stack,
-  StackDivider,
-} from "@chakra-ui/react";
+import { Avatar, Card, CardBody, Heading, Stack } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
+import { BsMicFill, BsMicMuteFill } from "react-icons/bs";
 import { channelAtom } from "../../../atoms/channel";
 import { voiceConfigAtom } from "../../../atoms/control";
 import { userAtom } from "../../../atoms/user";
@@ -27,18 +21,20 @@ export function VoiceSharing() {
 
   return (
     <Card className="voice-card">
-      <CardHeader>
+      <CardBody className="voice-body">
         <Heading size="md">Voices</Heading>
-      </CardHeader>
-      <CardBody>
-        <Stack divider={<StackDivider />} spacing={4}>
-          {participants.map((participant) =>
-            participant.isVoiceOn ? (
-              <div className={`voice-${participant.id}`} key={participant.id}>
-                {participant.nickname}
-              </div>
-            ) : null,
-          )}
+        <Stack className="voice-audio-list" spacing={2}>
+          {participants.map((participant) => (
+            <div className="voice-audio" key={`voice-${participant.id}`}>
+              <Avatar size="sm" name={participant.nickname} />
+              <span className="voice-audio-label">{participant.nickname}</span>
+              {participant.isVoiceOn ? (
+                <BsMicFill className="voice-audio-mic-on" />
+              ) : (
+                <BsMicMuteFill className="voice-audio-mic-off" />
+              )}
+            </div>
+          ))}
         </Stack>
       </CardBody>
     </Card>

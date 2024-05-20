@@ -2,3 +2,53 @@
   width: 100%;
   height: 100%
 }
+
+.voice-body {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-audio-list {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  display: flex;
+  gap: 8px;
+  border-radius: 8px;
+  overflow-y: auto;
+}
+
+.voice-audio {
+  width: 100%;
+  background-color: #1A202C;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+}
+
+.voice-audio-label {
+  color: white;
+  font-weight: 500;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.voice-audio-mic-on {
+  width: 1.7rem;
+  height: 1.7rem;
+  fill: #33aa33;
+}
+
+.voice-audio-mic-off {
+  width: 1.7rem;
+  height: 1.7rem;
+  fill: #aa3333;
+}
