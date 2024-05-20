@@ -14,6 +14,7 @@
     "@types/node": "^16.18.94",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
+    "@types/react-icons": "^3.0.0",
     "formik": "^2.4.5",
     "framer-motion": "^11.0.24",
     "jotai": "^2.8.0",
@@ -21,6 +22,7 @@
     "nanoid": "^5.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-icons": "^5.2.1",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"

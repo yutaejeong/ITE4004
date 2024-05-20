@@ -28,6 +28,7 @@
   width: 100%;
   height: 100%;
   grid-area: cam;
+  overflow-x: auto;
 }
 
 .chat-area {
