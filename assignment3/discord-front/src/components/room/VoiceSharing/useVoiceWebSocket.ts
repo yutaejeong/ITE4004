@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Message, PartialMessage, Participant } from "./types";
-import { base64ToBlob, playAudio } from "./utils";
+import { playAudio } from "./utils";
 
 interface Props {
   channel_id: string;
@@ -45,11 +45,8 @@ export const useVoiceWebSocket = ({ channel_id, nickname }: Props) => {
           setParticipants((prev) => [...prev, message.newbie]);
           break;
         case "audio":
-          const blob = base64ToBlob(message.data, message.mime);
-          const url = URL.createObjectURL(blob);
-          playAudio(url).finally(() => {
-            URL.revokeObjectURL(url);
-          });
+          const dataURL = message.data;
+          playAudio(dataURL);
           break;
         case "hide":
           setParticipants((prev) =>
