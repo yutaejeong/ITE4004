@@ -6,6 +6,7 @@ import { userAtom } from "../../../atoms/user";
 import "./CamSharing.css";
 import { useCamera } from "./useCamera";
 import { useCameraWebSocket } from "./useCameraWebSocket";
+import { BsFillCameraVideoOffFill } from "react-icons/bs";
 
 export function CamSharing() {
   const channel_id = useAtomValue(channelAtom);
@@ -36,10 +37,22 @@ export function CamSharing() {
                     videoContainersRef.current[participant.id] = _ref;
                   }}
                   alt={`${participant.nickname}님의 카메라 화면`}
+                  style={{ display: "none" }}
+                  onLoad={(e) => {
+                    e.currentTarget.style.display = "block";
+                  }}
                 />
                 <span className="cam-video-label">{participant.nickname}</span>
               </div>
-            ) : null,
+            ) : (
+              <div
+                key={`no-camera-${participant.id}`}
+                className="cam-video-wrapper"
+              >
+                <BsFillCameraVideoOffFill className="cam-video-no-video" />
+                <span className="cam-video-label">{participant.nickname}</span>
+              </div>
+            ),
           )}
         </div>
       </CardBody>
