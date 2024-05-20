@@ -1,6 +1,5 @@
 import { RefObject, useCallback, useEffect, useRef } from "react";
 import { PartialMessage } from "./types";
-import { blobToBase64 } from "./utils";
 
 interface Props {
   isVoiceOn: boolean;
@@ -23,12 +22,26 @@ export const useVoice = ({ isVoiceOn, sendMessageRef }: Props) => {
       const blob = new Blob(chunks.current, { type: chunks.current[0].type });
       chunks.current = [];
 
-      const base64String = await blobToBase64(blob);
-      sendMessageRef.current?.({
-        data: base64String,
-        mime: blob.type,
-        _type: "audio",
-      });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target === null) {
+          console.warn("Blob이 제대로 로드되지 않았습니다.");
+          return;
+        }
+        const convertedDataURL = event.target.result;
+        if (typeof convertedDataURL === "string") {
+          sendMessageRef.current?.({
+            _type: "audio",
+            data: convertedDataURL,
+          });
+        } else {
+          console.warn(
+            "Blob이 DataURL로 올바르게 변환되지 않았습니다.",
+            convertedDataURL,
+          );
+        }
+      };
+      reader.readAsDataURL(blob);
 
       mediaRecorderRef.current?.start();
       setTimeout(() => {

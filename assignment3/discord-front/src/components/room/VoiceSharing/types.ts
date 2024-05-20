@@ -9,7 +9,6 @@ export type Message =
       _type: "audio";
       sender_id: string;
       data: string;
-      mime: string;
     }
   | {
       _type: "hide";
@@ -41,4 +40,4 @@ export type Message =
 export type PartialMessage =
   | { _type: "hide" }
   | { _type: "show" }
-  | { _type: "audio"; data: string; mime: string };
+  | { _type: "audio"; data: string };
