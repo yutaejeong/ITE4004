@@ -92,7 +92,7 @@ export function CHannelContainer() {
               )}
             </ButtonGroup>
           ))}
-          <Button onClick={() => createNewChannel()}>체널 생성하기</Button>
+          <Button onClick={() => createNewChannel()}>채널 생성하기</Button>
         </div>
       </div>
     </>
