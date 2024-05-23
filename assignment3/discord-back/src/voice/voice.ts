@@ -1,31 +1,6 @@
 import { WebSocketServer } from "ws";
 import WebSocket = require("ws");
-
-interface Participant {
-  id: string;
-  nickname: string;
-  isVoiceOn: boolean;
-}
-
-export type Message =
-  | {
-      _type: "welcome";
-      id: string;
-      participants: Participant[];
-    }
-  | {
-      _type: "introduce";
-      id: string;
-      nickname: string;
-    }
-  | {
-      _type: "newbie";
-      newbie: Participant;
-    }
-  | {
-      _type: "goodbye";
-      escapee: Participant;
-    };
+import { Message, Participant } from "./types";
 
 export class VoiceWebSocketServer {
   ws_voice: WebSocketServer;
@@ -51,16 +26,22 @@ export class VoiceWebSocketServer {
         id: clientId,
       };
 
+      const broadcast = (message: string | WebSocket.RawData) => {
+        this.ws_voice.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message, {
+              binary: false,
+            });
+          }
+        });
+      };
+
       const introduceNewbie = () => {
         const newbieMessage: Message = {
           _type: "newbie",
           newbie: this.participants[clientId],
         };
-        this.ws_voice.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(newbieMessage));
-          }
-        });
+        broadcast(JSON.stringify(newbieMessage));
       };
 
       ws.on("error", console.error);
@@ -73,12 +54,16 @@ export class VoiceWebSocketServer {
               this.participants[message.id].nickname = message.nickname;
               introduceNewbie();
               break;
+            case "show":
+              this.participants[message.sender_id].isVoiceOn = true;
+              broadcast(data);
+              break;
+            case "hide":
+              this.participants[message.sender_id].isVoiceOn = false;
+              broadcast(data);
+              break;
             default:
-              this.ws_voice.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  client.send(data, { binary: isBinary });
-                }
-              });
+              broadcast(data);
           }
         }
       });
@@ -88,11 +73,7 @@ export class VoiceWebSocketServer {
           _type: "goodbye",
           escapee: this.participants[clientId],
         };
-        this.ws_voice.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(goodbyeMessage));
-          }
-        });
+        broadcast(JSON.stringify(goodbyeMessage));
         delete this.participants[clientId];
       });
     });
