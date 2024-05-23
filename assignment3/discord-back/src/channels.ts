@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
-import { CameraWebSocketServer } from "./camera.js";
+import { CameraWebSocketServer } from "./camera";
 import { create_websocket_chat } from "./chat";
 import { VoiceWebSocketServer } from "./voice";
 
