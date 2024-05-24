@@ -44,7 +44,7 @@ export const useVoiceWebSocket = ({ channel_id, nickname }: Props) => {
         case "newbie":
           setParticipants((prev) => [...prev, message.newbie]);
           break;
-        case "audio":
+        case "data":
           const dataURL = message.data;
           playAudio(dataURL);
           break;
@@ -52,7 +52,7 @@ export const useVoiceWebSocket = ({ channel_id, nickname }: Props) => {
           setParticipants((prev) =>
             prev.map((participant) =>
               participant.id === message.sender_id
-                ? ({ ...participant, isVoiceOn: false } satisfies Participant)
+                ? ({ ...participant, active: false } satisfies Participant)
                 : participant,
             ),
           );
@@ -61,7 +61,7 @@ export const useVoiceWebSocket = ({ channel_id, nickname }: Props) => {
           setParticipants((prev) =>
             prev.map((participant) =>
               participant.id === message.sender_id
-                ? ({ ...participant, isVoiceOn: true } satisfies Participant)
+                ? ({ ...participant, active: true } satisfies Participant)
                 : participant,
             ),
           );

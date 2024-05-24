@@ -31,7 +31,7 @@ export const useVoice = ({ isVoiceOn, sendMessageRef }: Props) => {
         const convertedDataURL = event.target.result;
         if (typeof convertedDataURL === "string") {
           sendMessageRef.current?.({
-            _type: "audio",
+            _type: "data",
             data: convertedDataURL,
           });
         } else {

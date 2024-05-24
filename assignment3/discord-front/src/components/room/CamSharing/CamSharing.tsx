@@ -26,7 +26,7 @@ export function CamSharing() {
         <Heading size="md">Cameras</Heading>
         <div className="cam-video-list">
           {participants.map((participant) =>
-            participant.isCameraOn ? (
+            participant.active ? (
               <div
                 key={`camera-${participant.id}`}
                 className="cam-video-wrapper"

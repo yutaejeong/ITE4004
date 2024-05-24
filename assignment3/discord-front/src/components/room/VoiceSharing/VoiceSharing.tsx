@@ -28,7 +28,7 @@ export function VoiceSharing() {
             <div className="voice-audio" key={`voice-${participant.id}`}>
               <Avatar size="sm" name={participant.nickname} />
               <span className="voice-audio-label">{participant.nickname}</span>
-              {participant.isVoiceOn ? (
+              {participant.active ? (
                 <BsMicFill className="voice-audio-mic-on" />
               ) : (
                 <BsMicMuteFill className="voice-audio-mic-off" />

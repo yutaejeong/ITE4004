@@ -1,22 +1,21 @@
+import { nanoid } from "nanoid";
 import { useEffect, useRef, useState } from "react";
-import { Message, PartialMessage, Participant } from "./types";
+import { Message, MessageData, PartialMessage, Participant } from "./types";
 
 interface Props {
   channel_id: string;
   nickname: string;
+  onReceiveData: (data: MessageData) => void;
 }
 
-export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
-  const videoContainersRef = useRef<Record<string, HTMLImageElement | null>>(
-    {},
-  );
+export function useCommunicate({ channel_id, nickname, onReceiveData }: Props) {
   const wsRef = useRef<WebSocket | null>(null);
   const idRef = useRef<string | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
   const sendMessageRef = useRef<(message: PartialMessage) => void>(() => {});
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   useEffect(() => {
-    const endpoint = `${process.env.REACT_APP_WS_SERVER!}/${channel_id}/camera`;
+    const endpoint = `${process.env.REACT_APP_WS_SERVER!}/${channel_id}/chat`;
     const ws = new WebSocket(endpoint);
 
     wsRef.current = ws;
@@ -48,35 +47,26 @@ export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
             ...prev,
             { ...message.newbie, active: false },
           ]);
+          onReceiveData({
+            _type: "announcement",
+            announcement_id: nanoid(),
+            action: "entrance",
+            nickname: message.newbie.nickname,
+          });
           break;
         case "data":
-          const videoContainer = videoContainersRef.current[message.sender_id];
-          if (videoContainer) {
-            videoContainer.src = message.data;
-          }
-          break;
-        case "hide":
-          setParticipants((prev) =>
-            prev.map((participant) =>
-              participant.id === message.sender_id
-                ? { ...participant, active: false }
-                : participant,
-            ),
-          );
-          break;
-        case "show":
-          setParticipants((prev) =>
-            prev.map((participant) =>
-              participant.id === message.sender_id
-                ? { ...participant, active: true }
-                : participant,
-            ),
-          );
+          onReceiveData(message.data);
           break;
         case "goodbye":
           setParticipants((prev) =>
             prev.filter((participant) => participant.id !== message.escapee.id),
           );
+          onReceiveData({
+            _type: "announcement",
+            announcement_id: nanoid(),
+            action: "leave",
+            nickname: message.escapee.nickname,
+          });
           break;
       }
     };
@@ -86,7 +76,11 @@ export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
         ws.close();
       }
     };
-  }, [channel_id, nickname]);
+  }, [channel_id, nickname, onReceiveData]);
 
-  return { participants, videoContainersRef, sendMessageRef };
-};
+  return {
+    sendMessageRef,
+    participants,
+    getWSStatus: () => wsRef.current?.readyState ?? WebSocket.CLOSED,
+  };
+}

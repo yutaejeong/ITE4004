@@ -1,22 +1,26 @@
 export interface Participant {
   id: string;
   nickname: string;
-  isCameraOn: boolean;
 }
+export type MessageData =
+  | {
+      _type: "message";
+      message_id: string;
+      content: string;
+      nickname: string;
+    }
+  | {
+      _type: "announcement";
+      announcement_id: string;
+      action: "entrance" | "leave";
+      nickname: string;
+    };
 
 export type Message =
   | {
-      _type: "video";
+      _type: "data";
       sender_id: string;
-      data: string;
-    }
-  | {
-      _type: "hide";
-      sender_id: string;
-    }
-  | {
-      _type: "show";
-      sender_id: string;
+      data: MessageData;
     }
   | {
       _type: "welcome";
@@ -36,3 +40,5 @@ export type Message =
       _type: "goodbye";
       escapee: Participant;
     };
+
+export type PartialMessage = { _type: "data"; data: MessageData };

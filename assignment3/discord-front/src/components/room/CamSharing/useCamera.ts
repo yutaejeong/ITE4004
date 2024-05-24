@@ -57,7 +57,7 @@ export const useCamera = ({ isCameraOn, sendMessageRef }: Props) => {
       canvas.height = videoRef.current.videoHeight;
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const data = canvas.toDataURL("image/jpeg");
-      sendMessageRef.current?.({ _type: "video", data });
+      sendMessageRef.current?.({ _type: "data", data });
     }
   }, [sendMessageRef]);
 
