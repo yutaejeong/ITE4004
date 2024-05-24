@@ -5,33 +5,32 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { channelAtom } from "../../../atoms/channel";
 import { userAtom } from "../../../atoms/user";
-import { useCommunicate } from "../../../hooks/useCommunicate";
-import { User } from "../../../types/common";
 import { FormikForm } from "../../common";
 import "./Chatting.css";
+import { MessageData, PartialMessage } from "./types";
+import { useCommunicate } from "./useChattingWebSocket";
 
 interface FormikValue {
   message: string;
 }
 
-interface MessageType {
-  sender: User;
-  message: string;
-  message_id: string;
-}
-
 export function Chatting() {
-  const nickname = useAtomValue(userAtom);
+  const { nickname } = useAtomValue(userAtom);
   const channel_id = useAtomValue(channelAtom);
-  const [received, setReceived] = useState<MessageType[]>([]);
+  const [received, setReceived] = useState<MessageData[]>([]);
   const historyRef = useRef<HTMLDivElement>(null);
-  const onReceive = useCallback((receivedData: MessageType) => {
-    setReceived((prev) => [...prev, receivedData]);
-  }, []);
-  const { sendMessage, getWSStatus } = useCommunicate<MessageType>({
+
+  const onReceiveData = useCallback(
+    (messageData: MessageData) => {
+      setReceived((prev) => [...prev, messageData]);
+    },
+    [setReceived],
+  );
+
+  const { sendMessageRef, getWSStatus } = useCommunicate({
     channel_id,
-    communicationType: "chat",
-    onReceive,
+    nickname,
+    onReceiveData,
   });
 
   useEffect(() => {
@@ -49,12 +48,16 @@ export function Chatting() {
       actions.setSubmitting(false);
       return;
     }
-    const message = {
-      sender: nickname,
-      message: values.message,
-      message_id: nanoid(),
+    const message: PartialMessage = {
+      _type: "data",
+      data: {
+        _type: "message",
+        message_id: nanoid(),
+        content: values.message,
+        nickname,
+      },
     };
-    sendMessage(message);
+    sendMessageRef.current(message);
     actions.setSubmitting(false);
     actions.resetForm();
   };
@@ -70,12 +73,21 @@ export function Chatting() {
       <CardBody className="chat-card-body">
         <Heading size="md">Messages</Heading>
         <div className="history" ref={historyRef}>
-          {received.map((message) => (
-            <p className="message" key={message.message_id}>
-              <span className="sender">[{message.sender.nickname}]</span>
-              {message.message}
-            </p>
-          ))}
+          {received.map((messageData) =>
+            messageData._type === "message" ? (
+              <p className="message" key={messageData.message_id}>
+                <span className="sender">[{messageData.nickname}]</span>
+                {messageData.content}
+              </p>
+            ) : (
+              <p className="announcement" key={messageData.announcement_id}>
+                <span className="sender">{messageData.nickname}</span>
+                {messageData.action === "entrance"
+                  ? "님이 입장하셨습니다."
+                  : "님이 퇴장하셨습니다."}
+              </p>
+            ),
+          )}
         </div>
         <FormikForm
           className="input-area"
