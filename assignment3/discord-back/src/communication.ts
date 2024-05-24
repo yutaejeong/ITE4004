@@ -1,15 +1,15 @@
 import { WebSocketServer } from "ws";
-import WebSocket = require("ws");
 import { Message, Participant } from "./types";
+import WebSocket = require("ws");
 
-export class VoiceWebSocketServer {
-  ws_voice: WebSocketServer;
+export class CommunicationServer {
+  serverSocket: WebSocketServer;
   participants: Record<string, Participant> = {};
 
   constructor() {
-    this.ws_voice = new WebSocketServer({ noServer: true });
+    this.serverSocket = new WebSocketServer({ noServer: true });
 
-    this.ws_voice.on("connection", (ws) => {
+    this.serverSocket.on("connection", (ws) => {
       const { v4: uuidv4 } = require("uuid");
       const clientId = uuidv4();
 
@@ -21,13 +21,13 @@ export class VoiceWebSocketServer {
       ws.send(JSON.stringify(welcomeMessage));
 
       this.participants[clientId] = {
-        isVoiceOn: false,
+        active: false,
         nickname: "",
         id: clientId,
       };
 
       const broadcast = (message: string | WebSocket.RawData) => {
-        this.ws_voice.clients.forEach((client) => {
+        this.serverSocket.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
             client.send(message, {
               binary: false,
@@ -55,11 +55,11 @@ export class VoiceWebSocketServer {
               introduceNewbie();
               break;
             case "show":
-              this.participants[message.sender_id].isVoiceOn = true;
+              this.participants[message.sender_id].active = true;
               broadcast(data);
               break;
             case "hide":
-              this.participants[message.sender_id].isVoiceOn = false;
+              this.participants[message.sender_id].active = false;
               broadcast(data);
               break;
             default:

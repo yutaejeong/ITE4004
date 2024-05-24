@@ -1,12 +1,12 @@
 export interface Participant {
   id: string;
   nickname: string;
-  isCameraOn: boolean;
+  active: boolean;
 }
 
 export type Message =
   | {
-      _type: "video";
+      _type: "data";
       sender_id: string;
       data: string;
     }
@@ -40,4 +40,4 @@ export type Message =
 export type PartialMessage =
   | { _type: "hide" }
   | { _type: "show" }
-  | { _type: "video"; data: string };
+  | { _type: "data"; data: string };

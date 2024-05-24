@@ -1,12 +1,12 @@
 export interface Participant {
   id: string;
   nickname: string;
-  isVoiceOn: boolean;
+  active: boolean;
 }
 
 export type Message =
   | {
-      _type: "audio";
+      _type: "data";
       sender_id: string;
       data: string;
     }
@@ -36,8 +36,3 @@ export type Message =
       _type: "goodbye";
       escapee: Participant;
     };
-
-export type PartialMessage =
-  | { _type: "hide" }
-  | { _type: "show" }
-  | { _type: "audio"; data: string };

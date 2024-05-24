@@ -46,10 +46,10 @@ export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
         case "newbie":
           setParticipants((prev) => [
             ...prev,
-            { ...message.newbie, isCameraOn: false },
+            { ...message.newbie, active: false },
           ]);
           break;
-        case "video":
+        case "data":
           const videoContainer = videoContainersRef.current[message.sender_id];
           if (videoContainer) {
             videoContainer.src = message.data;
@@ -59,7 +59,7 @@ export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
           setParticipants((prev) =>
             prev.map((participant) =>
               participant.id === message.sender_id
-                ? { ...participant, isCameraOn: false }
+                ? { ...participant, active: false }
                 : participant,
             ),
           );
@@ -68,7 +68,7 @@ export const useCameraWebSocket = ({ channel_id, nickname }: Props) => {
           setParticipants((prev) =>
             prev.map((participant) =>
               participant.id === message.sender_id
-                ? { ...participant, isCameraOn: true }
+                ? { ...participant, active: true }
                 : participant,
             ),
           );
