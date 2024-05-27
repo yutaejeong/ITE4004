@@ -1,4 +1,4 @@
-import { Card, CardBody, Heading } from "@chakra-ui/react";
+import { Avatar, Card, CardBody, Heading } from "@chakra-ui/react";
 import { FieldValidator, FormikHelpers } from "formik";
 import { useAtomValue } from "jotai";
 import { nanoid } from "nanoid";
@@ -73,18 +73,29 @@ export function Chatting() {
       <CardBody className="chat-card-body">
         <Heading size="md">Messages</Heading>
         <div className="history" ref={historyRef}>
-          {received.map((messageData) =>
+          {received.map((messageData, index) =>
             messageData._type === "message" ? (
-              <p className="message" key={messageData.message_id}>
-                <span className="sender">[{messageData.nickname}]</span>
-                {messageData.content}
-              </p>
+              <div className="message" key={messageData.message_id}>
+                {!(
+                  index > 0 &&
+                  received[index - 1]._type === "message" &&
+                  received[index - 1].nickname === messageData.nickname
+                ) && (
+                  <>
+                    <Avatar size="xs" name={messageData.nickname} />
+                    <span className="nickname">{messageData.nickname}</span>
+                  </>
+                )}
+                <p className="content">{messageData.content}</p>
+              </div>
             ) : (
               <p className="announcement" key={messageData.announcement_id}>
-                <span className="sender">{messageData.nickname}</span>
-                {messageData.action === "entrance"
-                  ? "님이 입장하셨습니다."
-                  : "님이 퇴장하셨습니다."}
+                <span className="nickname">{messageData.nickname}</span>
+                <span>
+                  {messageData.action === "entrance"
+                    ? "님이 입장하셨습니다."
+                    : "님이 퇴장하셨습니다."}
+                </span>
               </p>
             ),
           )}
