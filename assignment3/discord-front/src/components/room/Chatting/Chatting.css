@@ -21,20 +21,66 @@
   flex: 1;
   width: 100%;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.history > p.message {
+.history > div.message {
   padding: 4px;
   border-radius: 4px;
-  margin-top: 4px;
   transition: background-color 0.2s;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "profile nickname"
+    "profile content";
+  column-gap: 8px;
 }
 
-.history > p.message:hover {
+.history > div.message:hover {
   background-color: var(--chakra-colors-gray-800);
 }
 
-.history > p.message > span.sender {
+.history > div.message > .profile {
+  grid-area: profile;
+}
+
+.history > div.message > span.nickname {
+  grid-area: nickname;
   font-weight: bold;
-  margin-right: 4px;
+  max-width: calc(50dvw - 36px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history > div.message > p.content {
+  grid-area: content;
+}
+
+.history > p.announcement {
+  width: 100%;
+  font-weight: bold;
+  color: var(--chakra-colors-cyan-200);
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+}
+
+.history > p.announcement:hover {
+  background-color: var(--chakra-colors-gray-800);
+}
+
+.history > p.announcement > span.nickname {
+  max-width: 50dvw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history > p.announcement > span:last-child {
+  flex-shrink: 0;
 }

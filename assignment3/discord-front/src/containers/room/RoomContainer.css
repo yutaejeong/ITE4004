@@ -13,27 +13,19 @@
 }
 
 .voice-area {
-  width: 100%;
-  height: 100%;
   grid-area: voice;
   overflow-y: auto;
 }
 
 .control-area {
-  width: 100%;
-  height: 100%;
   grid-area: control;
 }
 
 .cam-area {
-  width: 100%;
-  height: 100%;
   grid-area: cam;
   overflow-x: auto;
 }
 
 .chat-area {
-  width: 100%;
-  height: 100%;
   grid-area: chat;
 }
