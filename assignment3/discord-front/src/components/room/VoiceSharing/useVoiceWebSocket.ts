@@ -30,12 +30,12 @@ export const useVoiceWebSocket = ({ channel_id, nickname }: Props) => {
 
     ws.onmessage = async (event) => {
       const message = JSON.parse(event.data) as Message;
-      switch (message._type) {
+      switch (message.type) {
         case "welcome":
           idRef.current = message.id;
           setParticipants(message.participants);
           const introduceMessage: Message = {
-            _type: "introduce",
+            type: "introduce",
             id: message.id,
             nickname,
           };

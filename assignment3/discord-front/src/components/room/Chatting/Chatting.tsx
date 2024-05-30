@@ -49,9 +49,9 @@ export function Chatting() {
       return;
     }
     const message: PartialMessage = {
-      _type: "data",
+      type: "data",
       data: {
-        _type: "message",
+        type: "message",
         message_id: nanoid(),
         content: values.message,
         nickname,
@@ -74,11 +74,11 @@ export function Chatting() {
         <Heading size="md">Messages</Heading>
         <div className="history" ref={historyRef}>
           {received.map((messageData, index) =>
-            messageData._type === "message" ? (
+            messageData.type === "message" ? (
               <div className="message" key={messageData.message_id}>
                 {!(
                   index > 0 &&
-                  received[index - 1]._type === "message" &&
+                  received[index - 1].type === "message" &&
                   received[index - 1].nickname === messageData.nickname
                 ) && (
                   <>

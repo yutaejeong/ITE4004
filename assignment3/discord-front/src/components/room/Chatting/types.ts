@@ -4,13 +4,13 @@ export interface Participant {
 }
 export type MessageData =
   | {
-      _type: "message";
+      type: "message";
       message_id: string;
       content: string;
       nickname: string;
     }
   | {
-      _type: "announcement";
+      type: "announcement";
       announcement_id: string;
       action: "entrance" | "leave";
       nickname: string;
@@ -18,27 +18,27 @@ export type MessageData =
 
 export type Message =
   | {
-      _type: "data";
+      type: "data";
       sender_id: string;
       data: MessageData;
     }
   | {
-      _type: "welcome";
+      type: "welcome";
       id: string;
       participants: Participant[];
     }
   | {
-      _type: "introduce";
+      type: "introduce";
       id: string;
       nickname: string;
     }
   | {
-      _type: "newbie";
+      type: "newbie";
       newbie: Participant;
     }
   | {
-      _type: "goodbye";
+      type: "goodbye";
       escapee: Participant;
     };
 
-export type PartialMessage = { _type: "data"; data: MessageData };
+export type PartialMessage = { type: "data"; data: MessageData };

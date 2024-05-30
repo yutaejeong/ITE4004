@@ -46,7 +46,7 @@ export function ChannelContainer() {
   function createNewChannel(channelName: string) {
     if (wsRef.current) {
       const message: ChannelActions = {
-        _type: "create",
+        type: "create",
         requester: uuid,
         channel_name: channelName,
       };
@@ -57,7 +57,7 @@ export function ChannelContainer() {
   function editChannel(channel_id: string, channelName: string) {
     if (wsRef.current) {
       const message: ChannelActions = {
-        _type: "update",
+        type: "update",
         requester: uuid,
         channel_id,
         channel_name: channelName,
@@ -69,7 +69,7 @@ export function ChannelContainer() {
   function deleteChannel(channel_id: string) {
     if (wsRef.current) {
       const message: ChannelActions = {
-        _type: "delete",
+        type: "delete",
         channel_id,
         requester: uuid,
       };

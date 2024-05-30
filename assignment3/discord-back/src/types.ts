@@ -8,34 +8,34 @@ export interface Participant {
 
 export type Message =
   | {
-      _type: "data";
+      type: "data";
       sender_id: string;
       data: string;
     }
   | {
-      _type: "hide";
+      type: "hide";
       sender_id: string;
     }
   | {
-      _type: "show";
+      type: "show";
       sender_id: string;
     }
   | {
-      _type: "welcome";
+      type: "welcome";
       id: string;
       participants: Participant[];
     }
   | {
-      _type: "introduce";
+      type: "introduce";
       id: string;
       nickname: string;
     }
   | {
-      _type: "newbie";
+      type: "newbie";
       newbie: Participant;
     }
   | {
-      _type: "goodbye";
+      type: "goodbye";
       escapee: Participant;
     };
 
@@ -51,17 +51,17 @@ export interface Channel {
 // Client -> Server
 export type ChannelActions =
   | {
-      _type: "delete";
+      type: "delete";
       channel_id: string;
       requester: string;
     }
   | {
-      _type: "create";
+      type: "create";
       channel_name: string;
       requester: string;
     }
   | {
-      _type: "update";
+      type: "update";
       channel_id: string;
       channel_name: string;
       requester: string;
@@ -69,7 +69,7 @@ export type ChannelActions =
 
 // Server -> Client
 export type ChannelResponse = {
-  _type: "list";
+  type: "list";
   channels: {
     owner: string;
     name: string;

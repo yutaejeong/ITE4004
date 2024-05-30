@@ -14,7 +14,7 @@ export class CommunicationServer {
       const clientId = uuidv4();
 
       const welcomeMessage: Message = {
-        _type: "welcome",
+        type: "welcome",
         id: clientId,
         participants: Object.values(this.participants),
       };
@@ -38,7 +38,7 @@ export class CommunicationServer {
 
       const introduceNewbie = () => {
         const newbieMessage: Message = {
-          _type: "newbie",
+          type: "newbie",
           newbie: this.participants[clientId],
         };
         broadcast(JSON.stringify(newbieMessage));
@@ -49,7 +49,7 @@ export class CommunicationServer {
       ws.on("message", (data, isBinary) => {
         if (!isBinary) {
           const message = JSON.parse(data.toString()) as Message;
-          switch (message._type) {
+          switch (message.type) {
             case "introduce":
               this.participants[message.id].nickname = message.nickname;
               introduceNewbie();
@@ -70,7 +70,7 @@ export class CommunicationServer {
 
       ws.on("close", () => {
         const goodbyeMessage: Message = {
-          _type: "goodbye",
+          type: "goodbye",
           escapee: this.participants[clientId],
         };
         broadcast(JSON.stringify(goodbyeMessage));
