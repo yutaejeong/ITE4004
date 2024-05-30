@@ -7,7 +7,7 @@ import {
   FormikConfig,
   FormikValues,
 } from "formik";
-import { HTMLAttributes } from "react";
+import { HTMLAttributes, RefObject } from "react";
 
 interface Props<T extends FormikValues>
   extends Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> {
@@ -16,6 +16,7 @@ interface Props<T extends FormikValues>
   placeholder: string;
   validator: FieldValidator;
   buttonText: string;
+  inputRef?: RefObject<HTMLInputElement>;
 }
 
 export function FormikForm<T extends FormikValues>({
@@ -24,6 +25,7 @@ export function FormikForm<T extends FormikValues>({
   placeholder,
   validator,
   buttonText,
+  inputRef,
   ...rest
 }: Props<T>) {
   const filedName = Object.keys(initialValues)[0];
@@ -41,6 +43,7 @@ export function FormikForm<T extends FormikValues>({
                   {...field}
                   placeholder={placeholder}
                   autoComplete="off"
+                  ref={inputRef}
                 />
                 <FormErrorMessage>{form.errors[filedName]}</FormErrorMessage>
               </FormControl>

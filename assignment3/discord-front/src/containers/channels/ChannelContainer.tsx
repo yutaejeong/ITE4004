@@ -1,4 +1,4 @@
-import { DeleteIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Button,
   ButtonGroup,
@@ -12,13 +12,15 @@ import { userAtom } from "../../atoms/user";
 import { ConfirmAlert } from "../../components/common";
 import { usePreventReload } from "../../hooks/usePreventReload";
 import "./ChannelContainer.css";
+import { CreateChannelButton } from "./CreateChannelButton";
+import { Channel, ChannelActions, ChannelResponse } from "./types";
+import { EditChannelButton } from "./EditChannelButton";
 
-export function CHannelContainer() {
+export function ChannelContainer() {
   usePreventReload();
+
   const wsRef = useRef<WebSocket | null>(null);
-  const [channels, setChannels] = useState<
-    { channel_id: string; owner: string }[]
-  >([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const { uuid } = useAtomValue(userAtom);
   const selectChannel = useSetAtom(channelAtom);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -27,8 +29,8 @@ export function CHannelContainer() {
     const ws = new WebSocket(`${process.env.REACT_APP_WS_SERVER!}/channels`);
 
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      setChannels([...message]);
+      const message: ChannelResponse = JSON.parse(event.data);
+      setChannels(message.channels);
     };
 
     wsRef.current = ws;
@@ -41,11 +43,24 @@ export function CHannelContainer() {
     };
   }, []);
 
-  function createNewChannel() {
+  function createNewChannel(channelName: string) {
     if (wsRef.current) {
-      const message = {
-        action: "create",
+      const message: ChannelActions = {
+        _type: "create",
         requester: uuid,
+        channel_name: channelName,
+      };
+      wsRef.current.send(JSON.stringify(message));
+    }
+  }
+
+  function editChannel(channel_id: string, channelName: string) {
+    if (wsRef.current) {
+      const message: ChannelActions = {
+        _type: "update",
+        requester: uuid,
+        channel_id,
+        channel_name: channelName,
       };
       wsRef.current.send(JSON.stringify(message));
     }
@@ -53,8 +68,8 @@ export function CHannelContainer() {
 
   function deleteChannel(channel_id: string) {
     if (wsRef.current) {
-      const message = {
-        action: "delete",
+      const message: ChannelActions = {
+        _type: "delete",
         channel_id,
         requester: uuid,
       };
@@ -66,13 +81,17 @@ export function CHannelContainer() {
     <>
       <div className="container">
         <div className="channels-list">
-          {channels.map(({ channel_id, owner }) => (
-            <ButtonGroup isAttached key={channel_id}>
-              <Button onClick={() => selectChannel(channel_id)}>
-                {channel_id}
-              </Button>
+          {channels.map(({ id, name, owner }) => (
+            <ButtonGroup isAttached key={id}>
+              <Button onClick={() => selectChannel(id)}>{name}</Button>
               {owner === uuid && (
                 <>
+                  <EditChannelButton
+                    name={name}
+                    onEdit={(channelName) => {
+                      editChannel(id, channelName);
+                    }}
+                  />
                   <IconButton
                     onClick={() => onOpen()}
                     icon={<DeleteIcon />}
@@ -86,13 +105,15 @@ export function CHannelContainer() {
                       "현재 채널에 참여 중인 이용자들은 연결이 끊깁니다."
                     }
                     action_text={"삭제하기"}
-                    action={() => deleteChannel(channel_id)}
+                    action={() => deleteChannel(id)}
                   />
                 </>
               )}
             </ButtonGroup>
           ))}
-          <Button onClick={() => createNewChannel()}>채널 생성하기</Button>
+          <CreateChannelButton
+            onCreate={(channelName) => createNewChannel(channelName)}
+          />
         </div>
       </div>
     </>
