@@ -5,7 +5,7 @@ import { channelAtom } from "./atoms/channel";
 import { userAtom } from "./atoms/user";
 import { LoginContainer } from "./containers/login/LoginContainer";
 import { RoomContainer } from "./containers/room/RoomContainer";
-import { CHannelContainer } from "./containers/channels/ChannelContainer";
+import { ChannelContainer } from "./containers/channels/ChannelContainer";
 
 function App() {
   const { nickname } = useAtomValue(userAtom);
@@ -23,7 +23,7 @@ function App() {
   }
 
   if (!channel) {
-    return <CHannelContainer />;
+    return <ChannelContainer />;
   }
 
   return <RoomContainer />;
