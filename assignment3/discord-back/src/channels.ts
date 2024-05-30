@@ -14,7 +14,7 @@ async function sendCurrentChannels(ws: WebSocket) {
     name: channel.name,
     id: channel_id,
   }));
-  const message: ChannelResponse = { _type: "list", channels: channel_list };
+  const message: ChannelResponse = { type: "list", channels: channel_list };
   ws.send(JSON.stringify(message));
 }
 
@@ -23,7 +23,7 @@ ws_channels.on("connection", function connection(ws) {
 
   ws.on("message", (data) => {
     const action: ChannelActions = JSON.parse(data.toString());
-    switch (action._type) {
+    switch (action.type) {
       case "create":
         const { v4: uuidv4 } = require("uuid");
         const channel_id = uuidv4();

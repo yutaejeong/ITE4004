@@ -6,38 +6,38 @@ export interface Participant {
 
 export type Message =
   | {
-      _type: "data";
+      type: "data";
       sender_id: string;
       data: string;
     }
   | {
-      _type: "hide";
+      type: "hide";
       sender_id: string;
     }
   | {
-      _type: "show";
+      type: "show";
       sender_id: string;
     }
   | {
-      _type: "welcome";
+      type: "welcome";
       id: string;
       participants: Participant[];
     }
   | {
-      _type: "introduce";
+      type: "introduce";
       id: string;
       nickname: string;
     }
   | {
-      _type: "newbie";
+      type: "newbie";
       newbie: Participant;
     }
   | {
-      _type: "goodbye";
+      type: "goodbye";
       escapee: Participant;
     };
 
 export type PartialMessage =
-  | { _type: "hide" }
-  | { _type: "show" }
-  | { _type: "data"; data: string };
+  | { type: "hide" }
+  | { type: "show" }
+  | { type: "data"; data: string };

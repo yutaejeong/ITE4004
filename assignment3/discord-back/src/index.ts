@@ -29,18 +29,18 @@ server.on("upgrade", function upgrade(request, socket, head) {
     return;
   }
 
-  // pathname: /{channel_id}/{communication_type}
+  // pathname: /{channel_id}/{communicationtype}
   if (!/^\/[^\/]+\/[^\/]+\/?$/.test(pathname)) {
     socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
     socket.destroy();
     return;
   }
 
-  const [_, channel_id, communication_type] = pathname.match(
+  const [_, channel_id, communicationtype] = pathname.match(
     /^\/([^\/]+)\/([^\/]+)/,
   )!;
 
-  switch (communication_type) {
+  switch (communicationtype) {
     case "chat":
       const ws_chat = channels[channel_id].chat;
       ws_chat.handleUpgrade(request, socket, head, function done(ws) {

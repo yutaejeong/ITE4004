@@ -31,7 +31,7 @@ export const useVoice = ({ isVoiceOn, sendMessageRef }: Props) => {
         const convertedDataURL = event.target.result;
         if (typeof convertedDataURL === "string") {
           sendMessageRef.current?.({
-            _type: "data",
+            type: "data",
             data: convertedDataURL,
           });
         } else {
@@ -53,7 +53,7 @@ export const useVoice = ({ isVoiceOn, sendMessageRef }: Props) => {
       mediaRecorderRef.current?.stop();
     }, 500);
 
-    sendMessageRef.current?.({ _type: "show" });
+    sendMessageRef.current?.({ type: "show" });
   }, [sendMessageRef]);
 
   const handleVoiceOff = useCallback(() => {
@@ -64,7 +64,7 @@ export const useVoice = ({ isVoiceOn, sendMessageRef }: Props) => {
       });
       mediaRecorderRef.current = null;
     }
-    sendMessageRef.current?.({ _type: "hide" });
+    sendMessageRef.current?.({ type: "hide" });
   }, [sendMessageRef]);
 
   useEffect(() => {

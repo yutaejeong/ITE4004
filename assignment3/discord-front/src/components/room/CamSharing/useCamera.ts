@@ -27,7 +27,7 @@ export const useCamera = ({ isCameraOn, sendMessageRef }: Props) => {
       };
       streamRef.current = stream;
 
-      sendMessageRef.current?.({ _type: "show" });
+      sendMessageRef.current?.({ type: "show" });
     } catch (e) {
       alert("권한을 확인해주세요.");
       return;
@@ -45,7 +45,7 @@ export const useCamera = ({ isCameraOn, sendMessageRef }: Props) => {
       videoRef.current.pause();
       videoRef.current.src = "";
     }
-    sendMessageRef.current?.({ _type: "hide" });
+    sendMessageRef.current?.({ type: "hide" });
   }, [sendMessageRef]);
 
   const startToSendVideo = useCallback(() => {
@@ -57,7 +57,7 @@ export const useCamera = ({ isCameraOn, sendMessageRef }: Props) => {
       canvas.height = videoRef.current.videoHeight;
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const data = canvas.toDataURL("image/jpeg");
-      sendMessageRef.current?.({ _type: "data", data });
+      sendMessageRef.current?.({ type: "data", data });
     }
   }, [sendMessageRef]);
 

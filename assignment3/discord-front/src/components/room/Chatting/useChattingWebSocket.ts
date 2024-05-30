@@ -31,12 +31,12 @@ export function useCommunicate({ channel_id, nickname, onReceiveData }: Props) {
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data) as Message;
-      switch (message._type) {
+      switch (message.type) {
         case "welcome":
           idRef.current = message.id;
           setParticipants(message.participants);
           const introduceMessage: Message = {
-            _type: "introduce",
+            type: "introduce",
             id: message.id,
             nickname,
           };
@@ -48,7 +48,7 @@ export function useCommunicate({ channel_id, nickname, onReceiveData }: Props) {
             { ...message.newbie, active: false },
           ]);
           onReceiveData({
-            _type: "announcement",
+            type: "announcement",
             announcement_id: nanoid(),
             action: "entrance",
             nickname: message.newbie.nickname,
@@ -62,7 +62,7 @@ export function useCommunicate({ channel_id, nickname, onReceiveData }: Props) {
             prev.filter((participant) => participant.id !== message.escapee.id),
           );
           onReceiveData({
-            _type: "announcement",
+            type: "announcement",
             announcement_id: nanoid(),
             action: "leave",
             nickname: message.escapee.nickname,

@@ -6,23 +6,23 @@ export interface Channel {
 
 export type ChannelActions =
   | {
-      _type: "delete";
+      type: "delete";
       channel_id: string;
       requester: string;
     }
   | {
-      _type: "create";
+      type: "create";
       channel_name: string;
       requester: string;
     }
   | {
-      _type: "update";
+      type: "update";
       channel_id: string;
       channel_name: string;
       requester: string;
     };
 
 export type ChannelResponse = {
-  _type: "list";
+  type: "list";
   channels: Channel[];
 };
