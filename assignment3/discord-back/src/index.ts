@@ -10,10 +10,10 @@ const server =
   process.env.HTTPS === "true"
     ? createSecureServer({
         key: fs.readFileSync(
-          path.join(__dirname, "../certs/" + process.env.SSL_KEY_FILE),
+          path.join(__dirname, `../${process.env.SSL_KEY_FILE}`),
         ),
         cert: fs.readFileSync(
-          path.join(__dirname, "../certs/" + process.env.SSL_CRT_FILE),
+          path.join(__dirname, `../${process.env.SSL_CRT_FILE}`),
         ),
       })
     : createServer();
