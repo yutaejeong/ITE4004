@@ -24,15 +24,15 @@ fi
 
 if command -v mkcert &> /dev/null; then
     echo "mkcert is installed."
-    mkcert -install
-    mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
-    mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 else
     echo "mkcert is not installed."
-    ./mkcert -install
-    ./mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
-    ./mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
+    read -p "Press enter to continue"
+    exit 0
 fi
+
+mkcert -install
+mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
+mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 
 cat <<EOF > discord-back/.env
 WS_SERVER=wss://localhost:8080
