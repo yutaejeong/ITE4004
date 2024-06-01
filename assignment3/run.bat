@@ -4,6 +4,7 @@ setlocal
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo Node runtime is not installed.
+    pause
     exit /b 1
 )
 
@@ -15,6 +16,7 @@ for /f "tokens=1 delims=." %%i in ("%NODE_VERSION%") do set "MAJOR_VERSION=%%i"
 
 if %MAJOR_VERSION% LSS 18 (
     echo Node runtime version is %NODE_VERSION% which is lower than 18.
+    pause
     exit /b 1
 )
 

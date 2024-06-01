@@ -4,6 +4,7 @@ if command -v node &> /dev/null; then
     echo "Node.js is installed."
 else
     echo "Node.js is not installed."
+    read -p "Press enter to continue"
     exit 0
 fi
 
@@ -17,6 +18,7 @@ if (( ${version_components[0]} >= 18 )); then
     echo "Installed Node.js version is greater than or equal to 18."
 else
     echo "Installed Node.js version is less than 18."
+    read -p "Press enter to continue"
     exit 0
 fi
 
