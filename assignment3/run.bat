@@ -24,7 +24,21 @@ call mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localho
 
 call mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 
+(
+echo WS_SERVER=wss://localhost:8080
+echo HTTPS=true
+echo SSL_CRT_FILE=localhost.pem
+echo SSL_KEY_FILE=localhost-key.pem
+) > discord-back/.env
+
 start /d discord-back cmd /c "npm i && npm start"
+
+(
+echo REACT_APP_WS_SERVER=wss://localhost:8080
+echo HTTPS=true
+echo SSL_CRT_FILE=localhost.pem
+echo SSL_KEY_FILE=localhost-key.pem
+) > discord-front/.env
 
 start /d discord-front cmd /c "npm i && npm start"
 
