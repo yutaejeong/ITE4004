@@ -1,4 +1,4 @@
-import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { DeleteIcon } from "@chakra-ui/icons";
 import {
   Button,
   ButtonGroup,
@@ -13,8 +13,8 @@ import { ConfirmAlert } from "../../components/common";
 import { usePreventReload } from "../../hooks/usePreventReload";
 import "./ChannelContainer.css";
 import { CreateChannelButton } from "./CreateChannelButton";
-import { Channel, ChannelActions, ChannelResponse } from "./types";
 import { EditChannelButton } from "./EditChannelButton";
+import { Channel, ChannelActions, ChannelResponse } from "./types";
 
 export function ChannelContainer() {
   usePreventReload();
