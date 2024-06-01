@@ -8,6 +8,7 @@ assignment3/discord-front/.env
 assignment3/discord-back/node_modules
 assignment3/discord-back/build
 assignment3/discord-back/.env
+assignment3/nohup.out
 
 .DS_Store
 *.pem

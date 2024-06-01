@@ -22,16 +22,15 @@ fi
 
 if command -v mkcert &> /dev/null; then
     echo "mkcert is installed."
+    mkcert -install
+    mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
+    mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 else
     echo "mkcert is not installed."
-    exit 0
+    ./mkcert -install
+    ./mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
+    ./mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 fi
-
-mkcert -install
-
-mkcert -cert-file discord-back/localhost.pem -key-file discord-back/localhost-key.pem localhost
-
-mkcert -cert-file discord-front/localhost.pem -key-file discord-front/localhost-key.pem localhost
 
 cat <<EOF > discord-back/.env
 WS_SERVER=wss://localhost:8080
@@ -40,7 +39,7 @@ SSL_CRT_FILE=localhost.pem
 SSL_KEY_FILE=localhost-key.pem
 EOF
 
-nohup scripts/run-back.sh > dev/null
+nohup scripts/run-back.sh &
 
 cat <<EOF > discord-front/.env
 REACT_APP_WS_SERVER=wss://localhost:8080
