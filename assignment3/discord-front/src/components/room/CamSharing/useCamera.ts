@@ -29,7 +29,7 @@ export const useCamera = ({ isCameraOn, sendMessageRef }: Props) => {
 
       sendMessageRef.current?.({ type: "show" });
     } catch (e) {
-      alert("권한을 확인해주세요.");
+      alert("장치가 없거나 권한이 없습니다.");
       return;
     }
   }, [sendMessageRef]);
