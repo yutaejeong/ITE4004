@@ -11,7 +11,9 @@
 ## TLS 인증서 설정
 
 1. [mkcert](https://github.com/FiloSottile/mkcert)를 설치합니다.
+   - macOS에서는 `brew install mkcert` 명령어로 설치할 수 있습니다.
    - Windows 환경의 경우 본 경로의 `mkcert.exe` 파일을 이용해주세요.
+     - 또는, [release](https://github.com/FiloSottile/mkcert/releases)에서 실행 파일을 다운로드 할 수 있습니다. Windows x86 CPU에서는 windows-amd64.exe 버전을 다운로드 하면 됩니다. 다운로드 후 해당 파일을 mkcert.exe로 명명한 뒤 현재 폴더에 있는 파일과 바꿔주세요.
 2. `mkcert --install` 명령어로 루트 인증서를 발급합니다.
 3. `mkcert localhost` 명령어로 localhost 도메인에 대한 루트 인증서를 발급합니다.
    - discord-front 및 discord-back 각각의 프로젝트 루트 경로에서 실행해야 합니다.
