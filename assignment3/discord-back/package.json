@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -r -f ./build && tsc",
-    "start": "rm -r -f ./build && tsc && node ./build/index.js"
+    "build": "tsc",
+    "start": "tsc && node ./build/index.js"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
