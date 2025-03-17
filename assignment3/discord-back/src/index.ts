@@ -1,25 +1,29 @@
-import * as fs from "fs";
-import * as path from "path";
 import { createServer } from "http";
-import { createServer as createSecureServer } from "https";
 import { channels, ws_channels } from "./channels";
 
 require("dotenv").config();
 
-const server =
-  process.env.HTTPS === "true"
-    ? createSecureServer({
-        key: fs.readFileSync(
-          path.join(__dirname, `../${process.env.SSL_KEY_FILE}`),
-        ),
-        cert: fs.readFileSync(
-          path.join(__dirname, `../${process.env.SSL_CRT_FILE}`),
-        ),
-      })
-    : createServer();
+const PORT = process.env.PORT || 8080;
+
+const server = createServer((req, res) => {
+  if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("OK");
+    return;
+  }
+
+  res.writeHead(404, { "Content-Type": "text/plain" });
+  res.end("Not Found");
+});
 
 server.on("upgrade", function upgrade(request, socket, head) {
-  const { pathname } = new URL(request.url!, process.env.WS_SERVER);
+  const pathname = request.url?.split("?")[0];
+
+  if (!pathname) {
+    socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+    socket.destroy();
+    return;
+  }
 
   // pathname: /channels
   if (pathname === "/channels") {
@@ -39,6 +43,11 @@ server.on("upgrade", function upgrade(request, socket, head) {
   const [_, channel_id, communicationtype] = pathname.match(
     /^\/([^\/]+)\/([^\/]+)/,
   )!;
+
+  if (!channels[channel_id]) {
+    socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+    socket.destroy();
+  }
 
   switch (communicationtype) {
     case "chat":
@@ -65,4 +74,6 @@ server.on("upgrade", function upgrade(request, socket, head) {
   }
 });
 
-server.listen(8080);
+server.listen(PORT || 8080, () => {
+  console.log(`WebSocket server running on port ${PORT}`);
+});
